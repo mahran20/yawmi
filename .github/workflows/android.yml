@@ -1,0 +1,96 @@
+name: Build Android app
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "android/**"
+      - ".github/workflows/android.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: android-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "8.11.1"
+
+      - name: Signing key
+        env:
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          if [ ${#SIGNING_PASSWORD} -lt 8 ]; then
+            echo "Missing SIGNING_PASSWORD secret (8+ characters). Add it in Settings > Secrets and variables > Actions." | tee android/build.log
+            exit 1
+          fi
+          KEY=android/app/yawmi.jks
+          if [ -f "$KEY.enc" ]; then
+            openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in "$KEY.enc" -out "$KEY" -pass env:SIGNING_PASSWORD
+          else
+            keytool -genkeypair -keystore "$KEY" -storetype PKCS12 -storepass "$SIGNING_PASSWORD" -keypass "$SIGNING_PASSWORD" \
+              -alias yawmi -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Yawmi"
+            openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in "$KEY" -out "$KEY.enc" -pass env:SIGNING_PASSWORD
+            git config user.name "build-bot"
+            git config user.email "build-bot@users.noreply.github.com"
+            git add -f "$KEY.enc"
+            git commit -qm "Add encrypted signing key"
+            git push -q origin HEAD:main
+          fi
+
+      - name: Build APK
+        working-directory: android
+        env:
+          SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+        run: |
+          set +e
+          gradle assembleRelease --no-daemon --stacktrace --warning-mode=summary > build.log 2>&1
+          code=$?
+          tail -n 60 build.log
+          exit $code
+
+      - name: Read version
+        id: v
+        run: echo "code=$(grep -oP 'versionCode\s*=\s*\K\d+' android/app/build.gradle.kts)" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare APK
+        run: cp android/app/build/outputs/apk/release/app-release.apk yawmi.apk
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.v.outputs.code }}
+          name: يومي ${{ steps.v.outputs.code }}
+          body: نزّل yawmi.apk وثبّته فوق النسخة القديمة.
+          files: yawmi.apk
+          make_latest: "true"
+
+      - name: Save build log
+        if: always()
+        run: |
+          mkdir -p /tmp/out
+          { echo "status: ${{ job.status }}"; echo "commit: ${{ github.sha }}"; echo; \
+            grep -E "^e: |error:|FAILURE|What went wrong|BUILD (SUCCESSFUL|FAILED)" android/build.log | head -n 120; \
+            echo; echo "----- tail -----"; tail -n 200 android/build.log; } > /tmp/out/build.log 2>/dev/null || echo "no log" > /tmp/out/build.log
+          git config user.name "build-bot"
+          git config user.email "build-bot@users.noreply.github.com"
+          git checkout --orphan build-log
+          git rm -rfq . || true
+          cp /tmp/out/build.log build.log
+          git add build.log
+          git commit -qm "build log ${{ github.sha }}"
+          git push -qf origin build-log

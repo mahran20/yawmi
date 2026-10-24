@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>يومي</title>
+<style>
+@font-face{font-family:"Plex Ar";src:url(fonts/plex-400.woff2) format("woff2");font-weight:400;font-display:swap}
+@font-face{font-family:"Plex Ar";src:url(fonts/plex-500.woff2) format("woff2");font-weight:500;font-display:swap}
+@font-face{font-family:"Plex Ar";src:url(fonts/plex-600.woff2) format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Readex";src:url(fonts/readex-600.woff2) format("woff2");font-weight:600;font-display:swap}
+@font-face{font-family:"Readex";src:url(fonts/readex-700.woff2) format("woff2");font-weight:700;font-display:swap}
+/* Layout: one RTL column. Today = greeting, next-prayer bar, day switcher, item groups, tasks. Settings = stacked cards. */
+:root{
+  --bg:#f2f5f3; --surface:#ffffff; --ink:#17201b; --muted:#5d6a63; --line:#dbe2dd;
+  --accent:#1f6b5c; --accent-ink:#ffffff; --accent-soft:#e0eee8; --done:#1f7a4d; --done-soft:#d9efe2;
+  --warn:#8a5410; --warn-soft:#fbefd9; --danger:#b4432f; --danger-soft:#f8e3de;
+  --display:"Readex","Segoe UI",Tahoma,sans-serif; --body:"Plex Ar","Segoe UI",Tahoma,sans-serif;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#101513; --surface:#19201d; --ink:#e6ece8; --muted:#95a29b; --line:#2a3430;
+  --accent:#6cc2ab; --accent-ink:#0d1a16; --accent-soft:#1c3430; --done:#5fd095; --done-soft:#163428;
+  --warn:#f0bf6e; --warn-soft:#3a2c14; --danger:#ee8a76; --danger-soft:#3b211c; color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
+#app{max-width:560px;margin:0 auto;padding:16px 16px 40px;display:flex;flex-direction:column;gap:14px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
+h1{font-size:1.45rem;font-weight:700}
+h2{font-size:1.02rem;font-weight:600}
+h3{font-size:.92rem;font-weight:600;color:var(--muted);margin-top:4px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.top .sub{color:var(--muted);font-size:.88rem;margin:0}
+.total{font-family:var(--display);font-weight:600;color:var(--accent);font-variant-numeric:tabular-nums;font-size:1rem;white-space:nowrap}
+.iconbtn{display:grid;place-items:center;width:42px;height:42px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);flex:none}
+.iconbtn svg{width:22px;height:22px}
+.iconbtn.sm{width:38px;height:38px;border-radius:10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.count{font-variant-numeric:tabular-nums;color:var(--muted);font-size:.9rem}
+.count.full{color:var(--done);font-weight:600}
+.hint{color:var(--muted);font-size:.86rem;margin:0}
+.prayerbar{background:var(--accent);color:var(--accent-ink);border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.np{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.np strong{font-family:var(--display);font-size:1.25rem;font-weight:700}
+.np .left{font-size:.92rem;opacity:.9}
+.np-label{font-size:.82rem;opacity:.85}
+.alarmline{font-size:.86rem;opacity:.9}
+.datebar{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:6px}
+.datebar button{background:none;border:0;font-size:1.3rem;width:42px;height:42px;border-radius:9px}
+.datebar button:disabled{opacity:.3;cursor:default}
+.datelabel{text-align:center}
+.datelabel strong{display:block;font-weight:600}
+.datelabel span{color:var(--muted);font-size:.85rem}
+.tiles{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+.tiles.cols5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.tile{font-weight:500;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 4px;min-height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;min-width:0}
+.tile .lb{overflow-wrap:anywhere}
+.tile .mark{width:22px;height:22px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:.8rem;font-weight:700;color:transparent}
+.tile small{color:var(--muted);font-size:.74rem;font-weight:400;font-variant-numeric:tabular-nums}
+.tile.on{background:var(--done-soft);border-color:var(--done);color:var(--done)}
+.tile.on .mark{background:var(--done);border-color:var(--done);color:var(--surface)}
+.tile.on small{color:var(--done)}
+.btn{border:0;border-radius:11px;background:var(--accent);color:var(--accent-ink);font-weight:600;padding:10px 16px;min-height:42px}
+.btn.sm{padding:6px 12px;min-height:36px;font-size:.9rem}
+.btn.ghost{background:var(--accent-soft);color:var(--accent)}
+.btn.danger{background:var(--danger-soft);color:var(--danger)}
+.btn.wide{width:100%}
+.inp,select,textarea{width:100%;min-width:0;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{resize:vertical;font-size:.85rem;direction:ltr;text-align:left}
+.add{display:flex;gap:8px;align-items:center}
+.add .inp{flex:1}
+.due{display:flex;align-items:center;gap:8px}
+.due label{color:var(--muted);font-size:.9rem;white-space:nowrap}
+ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.task{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--line);border-radius:11px;background:var(--bg)}
+.task .chk{flex:none;width:28px;height:28px;border-radius:8px;border:2px solid var(--line);background:var(--surface);color:transparent;font-weight:700;font-size:.85rem;display:grid;place-items:center}
+.task.done .chk{background:var(--done);border-color:var(--done);color:var(--surface)}
+.task .txt{flex:1;min-width:0;overflow-wrap:anywhere;display:flex;flex-direction:column}
+.task .txt small{color:var(--muted);font-size:.8rem}
+.task .txt small.late{color:var(--danger);font-weight:600}
+.task.done .txt span{color:var(--muted);text-decoration:line-through}
+.task .del{flex:none;background:none;border:0;color:var(--muted);font-size:.85rem;padding:6px;border-radius:6px}
+.empty{color:var(--muted);font-size:.9rem;margin:0}
+details summary{cursor:pointer;color:var(--muted);font-size:.9rem;padding:4px 0}
+details ul{margin-top:6px}
+.banner{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--warn-soft);color:var(--warn);border-radius:12px;padding:10px 12px;font-size:.9rem}
+.banner.up{background:var(--accent-soft);color:var(--accent)}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:6px 12px;font-size:.88rem}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:42px}
+.row > span{min-width:0}
+.ok{color:var(--done);font-weight:600;font-size:.9rem;white-space:nowrap}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:.88rem;color:var(--muted)}
+.switch{position:relative;width:52px;height:30px;border-radius:999px;border:0;background:var(--line);flex:none;padding:0}
+.switch span{position:absolute;top:3px;right:3px;width:24px;height:24px;border-radius:50%;background:var(--surface);transition:transform .15s}
+.switch.on{background:var(--accent)}
+.switch.on span{transform:translateX(-22px)}
+.ge{border-top:1px solid var(--line);padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.ge-head{display:flex;align-items:center;gap:8px}
+.ge-head .inp{font-weight:600}
+.ie{display:grid;grid-template-columns:minmax(0,1fr) 112px 38px;gap:6px;align-items:center}
+.ie .time{padding:8px 6px;font-size:.88rem}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;max-width:calc(100% - 32px);text-align:center;z-index:5;box-shadow:0 6px 20px rgba(0,0,0,.18)}
+@media (prefers-reduced-motion:no-preference){.tile,.task .chk,.chip{transition:background-color .15s,border-color .15s}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<div class="toast" id="toast" hidden></div>
+<script>
+(function(){
+"use strict";
+const A = window.Android || null;
+const app = document.getElementById("app");
+const $ = s => document.querySelector(s);
+const AR = "٠١٢٣٤٥٦٧٨٩";
+const ar = s => String(s).replace(/\d/g, d => AR[d]);
+const pad = n => String(n).padStart(2,"0");
+const keyOf = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+const CUT = 3;
+const PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
+const PN = {fajr:"الفجر",dhuhr:"الظهر",asr:"العصر",maghrib:"المغرب",isha:"العشاء"};
+const APK = "https://github.com/mahran20/yawmi/releases/latest/download/yawmi.apk";
+const CITIES = [["القاهرة",30.0444,31.2357],["الجيزة",30.0131,31.2089],["الإسكندرية",31.2001,29.9187],["المنصورة",31.0409,31.3785],["طنطا",30.7865,31.0004],["أسيوط",27.1810,31.1837],["الأقصر",25.6872,32.6396],["أسوان",24.0889,32.8998]];
+const ICON = {
+  gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
+  clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>'
+};
+
+function defaults(){ return {
+  v:2, welcomed:false,
+  settings:{ name:"", loc:{name:"القاهرة",lat:30.0444,lng:31.2357},
+    prayerNotify:{fajr:true,dhuhr:true,asr:true,maghrib:true,isha:true},
+    alarm:{enabled:false,offset:15,code:null},
+    nightly:{enabled:true,time:"22:50"} },
+  groups:[
+    {id:"prayers",title:"الصلوات",fixed:true,items:PRAYERS.map(p=>({id:p,label:PN[p]}))},
+    {id:"dhikr",title:"القرآن والأذكار",items:[{id:"quran",label:"ورد القرآن",sub:"الورد اليومي"},{id:"adhkar_am",label:"أذكار الصباح"},{id:"adhkar_pm",label:"أذكار المساء"}]},
+    {id:"teeth",title:"غسيل السنان",items:[{id:"teeth_am",label:"الصبح",sub:"أول ما أصحى"},{id:"teeth_pm",label:"بالليل",sub:"قبل ما أنام"}]},
+    {id:"supps",title:"التمرين والمكملات",items:[{id:"train",label:"التمرين"},{id:"creatine",label:"كرياتين"},{id:"protein",label:"بروتين"},{id:"carbs",label:"كارب"},{id:"pills",label:"البرشام",sub:"فيتامينات، زنك، أوميجا"}]}
+  ],
+  days:{}, tasks:{} }; }
+
+function normalize(o){
+  const d = defaults();
+  if(!o || typeof o !== "object") return d;
+  const s = o.settings || {};
+  o.settings = Object.assign(d.settings, s);
+  o.settings.loc = Object.assign(defaults().settings.loc, s.loc || {});
+  o.settings.prayerNotify = Object.assign(defaults().settings.prayerNotify, s.prayerNotify || {});
+  o.settings.alarm = Object.assign(defaults().settings.alarm, s.alarm || {});
+  o.settings.nightly = Object.assign(defaults().settings.nightly, s.nightly || {});
+  if(!Array.isArray(o.groups) || !o.groups.length) o.groups = d.groups;
+  o.groups.forEach(g => { if(!Array.isArray(g.items)) g.items = [] });
+  if(!o.groups.find(g => g.id === "prayers")) o.groups.unshift(d.groups[0]);
+  o.days = o.days || {}; o.tasks = o.tasks || {}; o.v = 2;
+  return o;
+}
+
+let S, view = "today", ptCache = {}, status = {}, upd = null, confirmDel = null, confirmT = null, showDue = false, saveT = null, toastT = null;
+function logicalToday(){ const d = new Date(); if(d.getHours() < CUT) d.setDate(d.getDate()-1); d.setHours(12,0,0,0); return d }
+let today = logicalToday(), sel = new Date(today);
+
+function load(){
+  let raw = null;
+  try{ raw = A ? A.load() : localStorage.getItem("yawmi") }catch(e){}
+  let o = null;
+  try{ o = raw ? JSON.parse(raw) : null }catch(e){}
+  S = normalize(o);
+}
+function writeNow(){ const s = JSON.stringify(S); try{ if(A) A.save(s); else localStorage.setItem("yawmi", s) }catch(e){} }
+function save(now){ clearTimeout(saveT); saveT = null; if(now) writeNow(); else saveT = setTimeout(()=>{ saveT = null; writeNow() }, 500) }
+function flush(){ if(saveT){ clearTimeout(saveT); saveT = null; writeNow() } }
+
+function getStatus(){
+  if(A){ try{ return JSON.parse(A.status()) }catch(e){} }
+  return {notifications:false,exact:true,fullScreen:true,battery:true,camera:false,version:"web",versionCode:0,nextAlarm:0};
+}
+
+/* ---------- time ---------- */
+function fmt12(hm){ if(!hm) return ""; let [h,m] = hm.split(":").map(Number); const ap = h < 12 ? "ص" : "م"; h = h % 12 || 12; return ar(h+":"+pad(m))+" "+ap }
+function hmOf(ms){ const d = new Date(ms); return pad(d.getHours())+":"+pad(d.getMinutes()) }
+function dayWord(ms){
+  const a = new Date(ms); a.setHours(0,0,0,0); const b = new Date(); b.setHours(0,0,0,0);
+  const diff = Math.round((a - b) / 864e5);
+  if(diff === 0) return "النهارده"; if(diff === 1) return "بكرة"; if(diff === -1) return "امبارح";
+  return a.toLocaleDateString("ar-EG",{weekday:"short",day:"numeric",month:"short"});
+}
+function fmtWhen(ms){ return dayWord(ms)+" "+fmt12(hmOf(ms)) }
+function fmtLeft(ms){ const t = Math.max(0, Math.ceil(ms/60000)); const h = Math.floor(t/60), m = t % 60; return h ? "بعد "+ar(h+":"+pad(m)) : "بعد "+ar(m)+" دقيقة" }
+
+function calcTimes(date, lat, lng){
+  const d2r = x => x*Math.PI/180, r2d = x => x*180/Math.PI, fix = (a,b) => ((a % b) + b) % b;
+  const y0 = date.getFullYear(), m0 = date.getMonth()+1, dd = date.getDate();
+  let y = y0, m = m0; if(m <= 2){ y -= 1; m += 12 }
+  const a = Math.floor(y/100), b = 2 - a + Math.floor(a/4);
+  const jd = Math.floor(365.25*(y+4716)) + Math.floor(30.6001*(m+1)) + dd + b - 1524.5 - lng/(15*24);
+  const tz = -new Date(y0, m0-1, dd, 12).getTimezoneOffset()/60;
+  function sun(j){
+    const D = j - 2451545, g = fix(357.529+0.98560028*D,360), q = fix(280.459+0.98564736*D,360);
+    const L = fix(q + 1.915*Math.sin(d2r(g)) + 0.020*Math.sin(d2r(2*g)), 360), e = 23.439 - 0.00000036*D;
+    const RA = fix(r2d(Math.atan2(Math.cos(d2r(e))*Math.sin(d2r(L)), Math.cos(d2r(L))))/15, 24);
+    return [r2d(Math.asin(Math.sin(d2r(e))*Math.sin(d2r(L)))), fix(q/15 - RA + 12, 24) - 12];
+  }
+  const noon = t => 12 - sun(jd + t/24)[1];
+  const angleT = (ang, t, ccw) => { const decl = sun(jd + t/24)[0], n = noon(t);
+    const x = (-Math.sin(d2r(ang)) - Math.sin(d2r(decl))*Math.sin(d2r(lat))) / (Math.cos(d2r(decl))*Math.cos(d2r(lat)));
+    const h = r2d(Math.acos(Math.max(-1, Math.min(1, x))))/15; return ccw ? n - h : n + h };
+  const asrT = t => { const decl = sun(jd + t/24)[0]; return angleT(-r2d(Math.atan(1/(1+Math.tan(d2r(Math.abs(lat-decl)))))), t, false) };
+  let f=5, sr=6, dh=12, as=13, mg=18, is=18;
+  for(let i=0;i<2;i++){ f=angleT(19.5,f,true); sr=angleT(0.833,sr,true); dh=noon(dh); as=asrT(as); mg=angleT(0.833,mg,false); is=angleT(17.5,is,false) }
+  const conv = (v, down) => { const h = v + tz - lng/15; let mm = down ? Math.floor(h*60) : Math.round(h*60); mm = ((mm % 1440) + 1440) % 1440; return pad(Math.floor(mm/60))+":"+pad(mm % 60) };
+  return {fajr:conv(f,true), sunrise:conv(sr), dhuhr:conv(dh), asr:conv(as), maghrib:conv(mg), isha:conv(is)};
+}
+function ptimes(d){
+  const k = keyOf(d);
+  if(ptCache[k]) return ptCache[k];
+  let r = null;
+  if(A){ try{ r = JSON.parse(A.prayerTimes(k)) }catch(e){} }
+  if(!r || !r.fajr) r = calcTimes(d, S.settings.loc.lat, S.settings.loc.lng);
+  return ptCache[k] = r;
+}
+function nextPrayer(){
+  const now = new Date();
+  for(let off = 0; off < 2; off++){
+    const d = new Date(); d.setDate(d.getDate()+off); d.setHours(12,0,0,0);
+    const t = ptimes(d);
+    for(const p of PRAYERS){ const [h,m] = t[p].split(":").map(Number); const at = new Date(d); at.setHours(h,m,0,0); if(at > now) return {p, at, hm:t[p]} }
+  }
+  return null;
+}
+
+/* ---------- today ---------- */
+function findG(id){ return S.groups.find(g => g.id === id) }
+function findI(gid, iid){ const g = findG(gid); return g ? g.items.find(i => i.id === iid) : null }
+
+function permIssue(){
+  if(!A) return null;
+  const al = S.settings.alarm;
+  if(!status.notifications) return "الإشعارات مقفولة، مش هيوصلك أي تذكير";
+  if(al.enabled && !status.exact) return "منبه الفجر مش هيرن في معاده بالظبط";
+  if(al.enabled && !status.fullScreen) return "منبه الفجر مش هيظهر والشاشة مقفولة";
+  if(al.enabled && !al.code) return "منبه الفجر شغال من غير كود. سجّل الكود";
+  if(al.enabled && !status.battery) return "الموبايل ممكن يوقف المنبه عشان يوفر البطارية";
+  return null;
+}
+
+function todayHTML(){
+  const k = keyOf(sel), rec = (S.days[k] || {}).checks || {};
+  const pt = ptimes(sel);
+  let total = 0, done = 0;
+  const groups = S.groups.map(g => {
+    const n = g.items.length; if(!n) return "";
+    const c = g.items.filter(i => rec[i.id]).length; total += n; done += c;
+    const tiles = g.items.map(i => {
+      const on = !!rec[i.id];
+      const sub = g.id === "prayers" ? fmt12(pt[i.id]) : (i.sub || (i.time ? fmt12(i.time) : ""));
+      return `<button class="tile${on?" on":""}" data-act="toggle" data-id="${esc(i.id)}" aria-pressed="${on}"><span class="mark">✓</span><span class="lb">${esc(i.label || "بند")}</span>${sub?`<small>${esc(sub)}</small>`:""}</button>`;
+    }).join("");
+    return `<section class="card"><div class="head"><h2>${esc(g.title || "قسم")}</h2><span class="count${c===n?" full":""}">${ar(c)} / ${ar(n)}</span></div><div class="tiles${g.id==="prayers"?" cols5":""}">${tiles}</div></section>`;
+  }).join("");
+
+  const name = S.settings.name;
+  const h = new Date().getHours();
+  const greet = (h >= 4 && h < 12 ? "صباح الخير" : "مساء الخير") + (name ? " يا "+esc(name) : "");
+
+  let banners = "";
+  if(!name && !S.welcomed){
+    banners += `<section class="card"><h2>أهلاً بيك في يومي</h2><p class="hint">اسمك إيه؟ وبعدها تقدر تعدّل البنود والتذكيرات ومنبه الفجر من الإعدادات.</p><div class="add"><input id="welcome-name" class="inp" placeholder="اسمك" maxlength="30" autocomplete="off"><button class="btn" data-act="welcome">يلا</button></div></section>`;
+  } else {
+    const issue = permIssue();
+    if(issue) banners += `<div class="banner"><span>${issue}</span><button class="btn sm" data-act="fix">صلّحها</button></div>`;
+  }
+  if(upd && upd.v > (status.versionCode || 0)) banners += `<div class="banner up"><span>فيه نسخة جديدة من التطبيق</span><button class="btn sm" data-act="update">نزّلها</button></div>`;
+
+  const np = nextPrayer();
+  const al = S.settings.alarm;
+  const pbar = np ? `<section class="prayerbar" aria-label="الصلاة الجاية"><span class="np-label">الصلاة الجاية</span><div class="np"><strong>${PN[np.p]} ${fmt12(np.hm)}</strong><span class="left" id="np-left">${fmtLeft(np.at - Date.now())}</span></div>${al.enabled && status.nextAlarm ? `<span class="alarmline">منبه الفجر: ${fmtWhen(status.nextAlarm)}</span>` : ""}</section>` : "";
+
+  const diff = Math.round((today - sel)/864e5);
+  const dlabel = diff === 0 ? "النهارده" : diff === 1 ? "امبارح" : sel.toLocaleDateString("ar-EG",{weekday:"long"});
+  const dsub = sel.toLocaleDateString("ar-EG",{weekday:"short",day:"numeric",month:"long"});
+
+  const entries = Object.entries(S.tasks);
+  const open = entries.filter(([,t]) => !t.done).sort((a,b) => ((a[1].due || 9e15) - (b[1].due || 9e15)) || (a[1].createdAt - b[1].createdAt));
+  const fin = entries.filter(([,t]) => t.done).sort((a,b) => (b[1].doneAt || 0) - (a[1].doneAt || 0)).slice(0, 30);
+  const row = ([id,t]) => `<li class="task${t.done?" done":""}"><button class="chk" data-act="task-check" data-id="${esc(id)}" aria-label="${t.done?"رجّع":"خلصت"}: ${esc(t.text)}" aria-pressed="${!!t.done}">✓</button><div class="txt"><span>${esc(t.text)}</span>${t.due?`<small class="${!t.done && t.due < Date.now() ? "late" : ""}">${fmtWhen(t.due)}</small>`:""}</div><button class="del" data-act="task-del" data-id="${esc(id)}" aria-label="امسح: ${esc(t.text)}">مسح</button></li>`;
+
+  return `<header class="top"><div><h1>${greet}</h1><p class="sub">${ar(done)} من ${ar(total)} النهارده</p></div><button class="iconbtn" data-act="settings" aria-label="الإعدادات">${ICON.gear}</button></header>
+  ${banners}${pbar}
+  <div class="datebar"><button data-act="prev" aria-label="اليوم اللي قبله">›</button><div class="datelabel"><strong>${dlabel}</strong><span>${dsub}</span></div><button data-act="next" aria-label="اليوم اللي بعده"${diff<=0?" disabled":""}>‹</button></div>
+  ${groups}
+  <section class="card"><div class="head"><h2>تاسكات ومشاوير</h2><span class="count">${open.length ? ar(open.length)+" فاضلين" : ""}</span></div>
+    <form class="add" id="addform"><input id="newtask" class="inp" type="text" placeholder="كشف دكتور، مشوار، حاجة تشتريها" autocomplete="off" maxlength="200" aria-label="تاسك جديد"><button type="button" class="iconbtn sm" data-act="toggle-due" aria-label="معاد تذكير" aria-pressed="${showDue}">${ICON.clock}</button><button type="submit" class="btn">ضيف</button></form>
+    ${showDue ? `<div class="due"><label for="taskdue">فكّرني</label><input id="taskdue" class="inp" type="datetime-local"></div>` : ""}
+    <ul>${open.length ? open.map(row).join("") : `<p class="empty">مفيش حاجة مستنياك. ضيف أي مشوار أو تاسك يجدّ في يومك.</p>`}</ul>
+    ${fin.length ? `<details><summary>اتعملت (${ar(fin.length)})</summary><ul>${fin.map(row).join("")}</ul></details>` : ""}
+  </section>`;
+}
+
+/* ---------- settings ---------- */
+function sw(act, on, label){ return `<button class="switch${on?" on":""}" role="switch" aria-checked="${!!on}" aria-label="${label}" data-act="${act}"><span></span></button>` }
+function permRow(label, ok, act){ return `<div class="row"><span>${label}</span>${ok ? `<span class="ok">شغال</span>` : `<button class="btn sm" data-act="${act}">فعّله</button>`}</div>` }
+
+function groupEditor(g){
+  if(g.id === "prayers") return `<div class="ge"><div class="ge-head"><strong>${esc(g.title)}</strong><span class="hint">ثابتة. تذكيراتها من «مواقيت الصلاة» تحت.</span></div></div>`;
+  const items = g.items.map(i => `<div class="ie"><input class="inp" data-input="item-label" data-g="${esc(g.id)}" data-i="${esc(i.id)}" value="${esc(i.label)}" aria-label="اسم البند" maxlength="40"><input type="time" class="inp time" data-input="item-time" data-g="${esc(g.id)}" data-i="${esc(i.id)}" value="${esc(i.time || "")}" aria-label="معاد تذكير ${esc(i.label)}"><button class="iconbtn sm" data-act="item-del" data-g="${esc(g.id)}" data-i="${esc(i.id)}" aria-label="امسح ${esc(i.label)}">${confirmDel === i.id ? "؟" : "✕"}</button></div>`).join("");
+  return `<div class="ge"><div class="ge-head"><input class="inp" data-input="grp-title" data-g="${esc(g.id)}" value="${esc(g.title)}" aria-label="اسم القسم" maxlength="40"><button class="btn sm danger" data-act="grp-del" data-g="${esc(g.id)}">${confirmDel === g.id ? "متأكد؟" : "امسح"}</button></div>${items || `<p class="hint">مفيش بنود في القسم ده.</p>`}<button class="btn ghost sm" data-act="item-add" data-g="${esc(g.id)}">+ بند</button></div>`;
+}
+
+function settingsHTML(){
+  const s = S.settings, st = status;
+  const offsets = [0,5,10,15,20,30,45,60].map(m => `<option value="${m}"${+s.alarm.offset === m ? " selected" : ""}>${m ? ar(m)+" دقيقة" : "مع الأذان"}</option>`).join("");
+  return `<header class="top"><button class="iconbtn" data-act="back" aria-label="رجوع">${ICON.back}</button><h1>الإعدادات</h1><span style="width:42px"></span></header>
+  <section class="card"><h2>اسمك</h2><input class="inp" data-input="name" value="${esc(s.name)}" placeholder="اكتب اسمك" maxlength="30" autocomplete="off" aria-label="اسمك"></section>
+
+  <section class="card"><h2>بنود يومك</h2><p class="hint">غيّر الأسماء، امسح اللي مش محتاجه، وضيف بنودك. لو حطيت ساعة جنب البند هيجيلك تذكير، بس لو لسه ماعلّمتش عليه.</p>
+    ${S.groups.map(groupEditor).join("")}
+    <button class="btn ghost wide" data-act="grp-add">+ قسم جديد</button></section>
+
+  <section class="card" id="sec-prayer"><h2>مواقيت الصلاة</h2>
+    <p class="hint">المواقيت محسوبة على: <strong>${esc(s.loc.name)}</strong> (الهيئة المصرية العامة للمساحة)</p>
+    <div class="chips">${CITIES.map(c => `<button class="chip${s.loc.name === c[0] ? " on" : ""}" data-act="city" data-name="${c[0]}" data-lat="${c[1]}" data-lng="${c[2]}">${c[0]}</button>`).join("")}<button class="chip${s.loc.name === "موقعي" ? " on" : ""}" data-act="loc-me">موقعي الحالي</button></div>
+    <h3>إشعار عند الأذان</h3>
+    <div class="chips">${PRAYERS.map(p => `<button class="chip${s.prayerNotify[p] ? " on" : ""}" data-act="pn" data-p="${p}" aria-pressed="${!!s.prayerNotify[p]}">${PN[p]}</button>`).join("")}</div>
+    <p class="hint">الإشعار فيه زرار «صليت ✓» يعلّم عليها من غير ما تفتح التطبيق.</p></section>
+
+  <section class="card" id="sec-alarm"><div class="head"><h2>منبه الفجر</h2>${sw("alarm-enabled", s.alarm.enabled, "منبه الفجر")}</div>
+    <p class="hint">بيرن بأعلى صوت، ومفيهوش snooze، ومش بيسكت غير لما تقوم تمسح باركود حاجة بعيدة عن سريرك. مثلاً معجون السنان في الحمام، فتصحى وتغسل سنانك وتتوضا.</p>
+    <div class="field"><label for="alarm-offset">يرن قبل أذان الفجر بـ</label><select id="alarm-offset" data-input="alarm-offset">${offsets}</select></div>
+    <div class="row"><span>${s.alarm.code ? "الكود متسجل" : "مفيش كود متسجل لسه"}</span><button class="btn sm${s.alarm.code ? " ghost" : ""}" data-act="scan">${s.alarm.code ? "غيّر الكود" : "سجّل الكود"}</button></div>
+    ${s.alarm.enabled && st.nextAlarm ? `<p class="hint">المنبه الجاي: ${fmtWhen(st.nextAlarm)}</p>` : ""}
+    <button class="btn ghost wide" data-act="test-alarm">جرّب المنبه بعد ٢٠ ثانية</button>
+    <p class="hint">دوس، واقفل الشاشة، واستنى. لو الكاميرا مش شغالة وقتها تقدر تسكته بحل ٣ مسائل حساب، عشان ماتتقفلش برة.</p></section>
+
+  <section class="card"><div class="head"><h2>تذكير آخر اليوم</h2>${sw("nightly-enabled", s.nightly.enabled, "تذكير آخر اليوم")}</div>
+    <div class="field"><label for="nightly-time">الساعة</label><input id="nightly-time" class="inp" type="time" data-input="nightly-time" value="${esc(s.nightly.time)}"></div>
+    <p class="hint">بيقولك فاضلك كام بند وكام تاسك.</p></section>
+
+  <section class="card" id="sec-perms"><h2>الأذونات</h2>
+    ${permRow("الإشعارات", st.notifications, "perm-notif")}
+    ${permRow("المنبهات في معادها بالظبط", st.exact, "perm-exact")}
+    ${permRow("المنبه يظهر والشاشة مقفولة", st.fullScreen, "perm-full")}
+    ${permRow("مايتوقفش عشان توفير البطارية", st.battery, "perm-battery")}
+    <p class="hint">لو موبايلك شاومي أو ريلمي أو أوبو: من إعدادات التطبيق فعّل «التشغيل التلقائي» (Autostart) كمان.</p></section>
+
+  <section class="card"><h2>نقل البيانات</h2><p class="hint">من التطبيق القديم: افتحه من Chrome، دوس «انسخ بياناتي»، وارجع الصق هنا.</p>
+    <textarea id="importbox" rows="3" placeholder="الصق هنا" aria-label="البيانات"></textarea>
+    <button class="btn wide" data-act="import">استورد</button>
+    <button class="btn ghost wide" data-act="backup">انسخ نسخة احتياطية من بياناتك</button></section>
+
+  <section class="card"><h2>عن التطبيق</h2><p class="hint">النسخة ${esc(st.version || "")}</p><button class="btn ghost wide" data-act="check-update">دوّر على تحديث</button></section>`;
+}
+
+/* ---------- render ---------- */
+function render(){
+  const keep = {};
+  ["newtask","taskdue","importbox","welcome-name"].forEach(id => { const el = document.getElementById(id); if(el) keep[id] = el.value });
+  status = getStatus();
+  app.innerHTML = view === "settings" ? settingsHTML() : todayHTML();
+  Object.entries(keep).forEach(([id,v]) => { const el = document.getElementById(id); if(el) el.value = v });
+}
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true }, 2600) }
+function focusSel(sel, select){ const el = document.querySelector(sel); if(el){ el.focus(); if(select && el.select) el.select(); el.scrollIntoView({block:"center"}) } }
+function armConfirm(id){ confirmDel = id; render(); clearTimeout(confirmT); confirmT = setTimeout(() => { confirmDel = null; if(view === "settings") render() }, 3000) }
+function goSettings(anchor){ flush(); view = "settings"; render(); if(anchor){ const el = document.getElementById(anchor); if(el) el.scrollIntoView() } else window.scrollTo(0,0) }
+function goBack(){ if(view === "settings"){ flush(); view = "today"; render(); window.scrollTo(0,0); return true } return false }
+function copyText(s){
+  if(A){ A.copy(s); toast("اتنسخ"); return }
+  if(navigator.clipboard) navigator.clipboard.writeText(s).then(() => toast("اتنسخ"), () => toast("مقدرتش أنسخ"));
+}
+
+function doImport(){
+  const box = $("#importbox"); let o = null;
+  try{ o = JSON.parse(box.value.trim()) }catch(e){}
+  if(!o || typeof o !== "object"){ toast("النص ده مش بيانات صحيحة"); return }
+  let nd = 0, nt = 0;
+  for(const [k,v] of Object.entries(o.days || {})){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(k)) continue;
+    const d = S.days[k] || (S.days[k] = {date:k, checks:{}}); d.checks = d.checks || {};
+    for(const [id,val] of Object.entries((v && v.checks) || {})){ if(val === true && !d.checks[id]){ d.checks[id] = true; nd++ } }
+  }
+  for(const [id,t] of Object.entries(o.tasks || {})){
+    if(S.tasks[id] || !t || typeof t.text !== "string") continue;
+    S.tasks[id] = {text:t.text, done:!!t.done, createdAt:t.createdAt || Date.now(), doneAt:t.doneAt || null, due:t.due || null}; nt++;
+  }
+  save(true); box.value = ""; render(); toast("اتنقل "+ar(nd)+" علامة و"+ar(nt)+" تاسك");
+}
+
+function checkUpdate(manual){
+  if(!A) return;
+  let last = 0;
+  try{ last = +localStorage.getItem("updChecked") || 0; upd = JSON.parse(localStorage.getItem("upd") || "null") }catch(e){}
+  if(!manual && Date.now() - last < 6*3600e3) return;
+  fetch("https://api.github.com/repos/mahran20/yawmi/releases/latest", {cache:"no-store"})
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(j => {
+      const v = parseInt(String(j.tag_name || "").replace(/\D/g, ""), 10) || 0;
+      upd = v > (status.versionCode || 0) ? {v} : null;
+      try{ localStorage.setItem("updChecked", String(Date.now())); localStorage.setItem("upd", JSON.stringify(upd)) }catch(e){}
+      if(manual) toast(upd ? "فيه نسخة جديدة" : "عندك آخر نسخة");
+      render();
+    })
+    .catch(() => { if(manual) toast("مفيش نت دلوقتي") });
+}
+
+/* ---------- events ---------- */
+app.addEventListener("click", e => {
+  const b = e.target.closest("[data-act]"); if(!b || b.disabled) return;
+  const act = b.dataset.act, id = b.dataset.id;
+  switch(act){
+    case "toggle": {
+      const k = keyOf(sel); const d = S.days[k] || (S.days[k] = {date:k, checks:{}}); d.checks = d.checks || {};
+      if(d.checks[id]) delete d.checks[id]; else d.checks[id] = true;
+      save(true); render(); break;
+    }
+    case "prev": sel.setDate(sel.getDate()-1); render(); break;
+    case "next": if(keyOf(sel) !== keyOf(today)){ sel.setDate(sel.getDate()+1); render() } break;
+    case "settings": goSettings(); break;
+    case "back": goBack(); break;
+    case "task-check": { const t = S.tasks[id]; if(!t) break; t.done = !t.done; t.doneAt = t.done ? Date.now() : null; save(true); render(); break }
+    case "task-del": delete S.tasks[id]; save(true); render(); break;
+    case "toggle-due": showDue = !showDue; render(); if(showDue) focusSel("#taskdue"); break;
+    case "welcome": {
+      const v = (($("#welcome-name") || {}).value || "").trim();
+      if(v) S.settings.name = v.slice(0,30);
+      S.welcomed = true; save(true); render();
+      if(A && !status.notifications) A.requestNotifications();
+      break;
+    }
+    case "fix": {
+      const al = S.settings.alarm;
+      goSettings(status.notifications && al.enabled && !al.code ? "sec-alarm" : "sec-perms"); break;
+    }
+    case "update": if(A) A.openUrl(APK); else window.open(APK); break;
+    case "grp-add": { const g = {id:uid("g"), title:"قسم جديد", items:[]}; S.groups.push(g); save(true); render(); focusSel(`[data-input="grp-title"][data-g="${g.id}"]`, true); break }
+    case "grp-del": { const g = b.dataset.g; if(confirmDel !== g){ armConfirm(g); break } S.groups = S.groups.filter(x => x.id !== g); confirmDel = null; save(true); render(); toast("القسم اتمسح"); break }
+    case "item-add": { const g = findG(b.dataset.g); if(!g) break; const it = {id:uid("i"), label:"بند جديد"}; g.items.push(it); save(true); render(); focusSel(`[data-input="item-label"][data-i="${it.id}"]`, true); break }
+    case "item-del": {
+      const g = findG(b.dataset.g), i = b.dataset.i; if(!g) break;
+      if(confirmDel !== i){ armConfirm(i); break }
+      g.items = g.items.filter(x => x.id !== i); confirmDel = null; save(true); render(); toast("البند اتمسح"); break;
+    }
+    case "city": S.settings.loc = {name:b.dataset.name, lat:+b.dataset.lat, lng:+b.dataset.lng}; ptCache = {}; save(true); render(); toast("المواقيت على "+b.dataset.name); break;
+    case "loc-me": if(A){ A.requestLocation(); toast("بجيب موقعك…") } else toast("متاحة في التطبيق بس"); break;
+    case "pn": { const p = b.dataset.p; S.settings.prayerNotify[p] = !S.settings.prayerNotify[p]; save(true); render(); break }
+    case "alarm-enabled": {
+      const al = S.settings.alarm; al.enabled = !al.enabled; save(true); render();
+      if(al.enabled) toast(al.code ? "المنبه اتظبط" : "سجّل الكود عشان المنبه يشتغل صح");
+      break;
+    }
+    case "nightly-enabled": S.settings.nightly.enabled = !S.settings.nightly.enabled; save(true); render(); break;
+    case "scan": if(A) A.scanCode(); else toast("متاحة في التطبيق بس"); break;
+    case "test-alarm": if(A){ A.testAlarm(20); toast("المنبه هيرن بعد ٢٠ ثانية. اقفل الشاشة.") } else toast("متاحة في التطبيق بس"); break;
+    case "perm-notif": if(A) A.requestNotifications(); break;
+    case "perm-exact": if(A) A.openExactAlarmSettings(); break;
+    case "perm-full": if(A) A.openFullScreenSettings(); break;
+    case "perm-battery": if(A) A.requestBattery(); break;
+    case "import": doImport(); break;
+    case "backup": flush(); copyText(JSON.stringify(S)); break;
+    case "check-update": checkUpdate(true); break;
+  }
+});
+
+app.addEventListener("input", e => {
+  const el = e.target, k = el.dataset.input; if(!k) return;
+  if(k === "name"){ S.settings.name = el.value.trim().slice(0,30); save() }
+  else if(k === "grp-title"){ const g = findG(el.dataset.g); if(g){ g.title = el.value; save() } }
+  else if(k === "item-label"){ const it = findI(el.dataset.g, el.dataset.i); if(it){ it.label = el.value; save() } }
+});
+
+app.addEventListener("change", e => {
+  const el = e.target, k = el.dataset.input; if(!k) return;
+  if(k === "item-time"){
+    const it = findI(el.dataset.g, el.dataset.i); if(!it) return;
+    it.time = el.value || null; save(true);
+    toast(el.value ? "هفكّرك بـ«"+(it.label || "البند")+"» الساعة "+fmt12(el.value) : "اتشال التذكير");
+  } else if(k === "alarm-offset"){ S.settings.alarm.offset = +el.value; save(true); render() }
+  else if(k === "nightly-time"){ if(el.value){ S.settings.nightly.time = el.value; save(true); toast("هفكّرك الساعة "+fmt12(el.value)) } }
+});
+
+app.addEventListener("submit", e => {
+  if(e.target.id !== "addform") return;
+  e.preventDefault();
+  const inp = $("#newtask"); const text = inp.value.trim(); if(!text) return;
+  const dueEl = $("#taskdue"); let due = null;
+  if(dueEl && dueEl.value){ const t = new Date(dueEl.value).getTime(); if(!isNaN(t)) due = t }
+  S.tasks[uid("t")] = {text, done:false, createdAt:Date.now(), doneAt:null, due};
+  inp.value = ""; if(dueEl) dueEl.value = ""; showDue = false;
+  save(true); render(); focusSel("#newtask");
+  if(due) toast("هفكّرك "+fmtWhen(due));
+});
+
+document.addEventListener("visibilitychange", () => { if(document.visibilityState === "hidden") flush() });
+
+/* ---------- native hooks ---------- */
+window.onNativeBack = goBack;
+window.onNativeStatus = () => render();
+window.onNativeResume = () => {
+  flush(); load(); ptCache = {};
+  const t = logicalToday();
+  if(keyOf(t) !== keyOf(today)){ if(keyOf(sel) === keyOf(today)) sel = new Date(t); today = t }
+  render(); checkUpdate(false);
+};
+window.onNativeScan = code => {
+  if(!code){ toast("ماتسجلش كود"); return }
+  S.settings.alarm.code = code; save(true); render();
+  toast("الكود اتسجل. المنبه مش هيسكت غير بيه");
+};
+window.onNativeLocation = loc => {
+  if(!loc){ toast("مقدرتش أجيب موقعك. شغّل الـ Location وجرب تاني"); return }
+  S.settings.loc = {name:"موقعي", lat:+(+loc.lat).toFixed(4), lng:+(+loc.lng).toFixed(4)};
+  ptCache = {}; save(true); render(); toast("المواقيت اتظبطت على موقعك");
+};
+
+setInterval(() => {
+  if(view !== "today") return;
+  const a = document.activeElement;
+  if(a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA")) return;
+  const t = logicalToday();
+  if(keyOf(t) !== keyOf(today)){ if(keyOf(sel) === keyOf(today)) sel = new Date(t); today = t }
+  render();
+}, 30000);
+
+load(); render(); checkUpdate(false);
+window.__yawmi = {calcTimes, normalize, defaults};
+})();
+</script>
+</body>
+</html>

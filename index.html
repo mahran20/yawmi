@@ -78,6 +78,9 @@ details ul{margin-top:6px}
 .status{font-size:.85rem;color:var(--muted);min-height:1.2em;text-align:center}
 .foot{color:var(--muted);font-size:.82rem;margin:0;text-align:center}
 @media (prefers-reduced-motion:no-preference){.tile,.task .chk{transition:background-color .15s,border-color .15s}}
+.getapp{display:block;text-align:center;background:var(--accent);color:var(--surface);text-decoration:none;font-weight:600;border-radius:12px;padding:12px 14px}
+.export{font:inherit;font-weight:600;color:var(--accent);background:var(--accent-soft);border:0;border-radius:12px;padding:12px 14px;cursor:pointer;width:100%}
+#exportbox{width:100%;min-height:80px;font-size:.8rem;direction:ltr;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);padding:8px}
 </style>
 </head>
 <body>
@@ -86,6 +89,7 @@ details ul{margin-top:6px}
     <h1>يومي</h1>
     <div class="total" id="total">0 / 15</div>
   </header>
+  <a class="getapp" href="https://github.com/mahran20/yawmi/releases/latest/download/yawmi.apk">نزّل تطبيق يومي للأندرويد: فيه منبه فجر وإشعارات</a>
 
   <div class="datebar">
     <button id="prev" aria-label="اليوم اللي قبله">›</button>
@@ -123,7 +127,9 @@ details ul{margin-top:6px}
     <details id="donebox" hidden><summary id="donesum">اتعملت</summary><ul id="donelist"></ul></details>
   </section>
 
-    <p class="foot">اللي تعلّم عليه قبل الساعة ٤ الفجر بيتحسب على اليوم اللي فات. التاسكات مش مربوطة بيوم، بتفضل لحد ما تخلصها. كل حاجة محفوظة على موبايلك وشغالة من غير نت.</p>
+    <button class="export" id="exportbtn" type="button">انسخ بياناتي للتطبيق الجديد</button>
+  <textarea id="exportbox" hidden readonly aria-label="بياناتك"></textarea>
+  <p class="foot">اللي تعلّم عليه قبل الساعة ٤ الفجر بيتحسب على اليوم اللي فات. التاسكات مش مربوطة بيوم، بتفضل لحد ما تخلصها. كل حاجة محفوظة على موبايلك وشغالة من غير نت.</p>
 </div>
 
 <script>
@@ -213,6 +219,12 @@ function renderTasks(){
 
 function setTask(id,t){tasks[id]=t; renderTasks(); queue()}
 
+document.getElementById("exportbtn").addEventListener("click",()=>{
+  const txt=JSON.stringify({days,tasks}); const btn=document.getElementById("exportbtn"); const box=document.getElementById("exportbox");
+  const done=()=>{btn.textContent="اتنسخ. افتح التطبيق الجديد، الإعدادات، نقل البيانات، والصق"};
+  const fallback=()=>{box.hidden=false; box.value=txt; box.focus(); box.select(); btn.textContent="انسخ النص اللي تحت يدوي"};
+  if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done,fallback); else fallback();
+});
 document.getElementById("addform").addEventListener("submit",e=>{
   e.preventDefault();
   const inp=document.getElementById("newtask"); const text=inp.value.trim(); if(!text) return;
