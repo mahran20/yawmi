@@ -25,7 +25,7 @@
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5}
-#app{max-width:560px;margin:0 auto;padding:16px 16px 40px;display:flex;flex-direction:column;gap:14px}
+#app{max-width:600px;margin:0 auto;padding:16px 16px 40px;display:flex;flex-direction:column;gap:14px}
 h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance}
 h1{font-size:1.45rem;font-weight:700}
 h2{font-size:1.02rem;font-weight:600}
@@ -56,7 +56,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .datelabel{text-align:center}
 .datelabel strong{display:block;font-weight:600}
 .datelabel span{color:var(--muted);font-size:.85rem}
-.tiles{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+.tiles{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(96px,1fr))}
 .tiles.cols5{grid-template-columns:repeat(5,minmax(0,1fr))}
 .tile{font-weight:500;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:10px 4px;min-height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-align:center;min-width:0}
 .tile .lb{overflow-wrap:anywhere}
@@ -127,6 +127,11 @@ const keyOf = d => d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const uid = p => p + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 const CUT = 3;
+const UA = navigator.userAgent || "";
+const IS_ANDROID = /android/i.test(UA);
+const IS_IOS = /iphone|ipad|ipod/i.test(UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const STANDALONE = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+let installEvt = null;
 const PRAYERS = ["fajr","dhuhr","asr","maghrib","isha"];
 const PN = {fajr:"الفجر",dhuhr:"الظهر",asr:"العصر",maghrib:"المغرب",isha:"العشاء"};
 const APK = "https://github.com/mahran20/yawmi/releases/latest/download/yawmi.apk";
@@ -176,6 +181,12 @@ function load(){
   try{ raw = A ? A.load() : localStorage.getItem("yawmi") }catch(e){}
   let o = null;
   try{ o = raw ? JSON.parse(raw) : null }catch(e){}
+  if(!A && !o){
+    try{
+      const old = JSON.parse(localStorage.getItem("dc2") || "null");
+      if(old && (old.days || old.tasks)){ o = defaults(); o.days = old.days || {}; o.tasks = old.tasks || {}; S = normalize(o); writeNow(); return }
+    }catch(e){}
+  }
   S = normalize(o);
 }
 function writeNow(){ const s = JSON.stringify(S); try{ if(A) A.save(s); else localStorage.setItem("yawmi", s) }catch(e){} }
@@ -281,6 +292,11 @@ function todayHTML(){
     const issue = permIssue();
     if(issue) banners += `<div class="banner"><span>${issue}</span><button class="btn sm" data-act="fix">صلّحها</button></div>`;
   }
+  if(!A){
+    if(IS_ANDROID) banners += `<div class="banner up"><span>تطبيق الأندرويد فيه منبه الفجر والإشعارات</span><button class="btn sm" data-act="update">نزّله</button></div>`;
+    else if(IS_IOS && !STANDALONE) banners += `<div class="banner up"><span>ضيفه للشاشة الرئيسية: دوس زرار المشاركة في Safari، وبعدين «إضافة إلى الشاشة الرئيسية»</span></div>`;
+    else if(installEvt && !STANDALONE) banners += `<div class="banner up"><span>ثبّت يومي كتطبيق على جهازك</span><button class="btn sm" data-act="install">ثبّت</button></div>`;
+  }
   if(upd && upd.v > (status.versionCode || 0)) banners += `<div class="banner up"><span>فيه نسخة جديدة من التطبيق</span><button class="btn sm" data-act="update">نزّلها</button></div>`;
 
   const np = nextPrayer();
@@ -331,11 +347,12 @@ function settingsHTML(){
   <section class="card" id="sec-prayer"><h2>مواقيت الصلاة</h2>
     <p class="hint">المواقيت محسوبة على: <strong>${esc(s.loc.name)}</strong> (الهيئة المصرية العامة للمساحة)</p>
     <div class="chips">${CITIES.map(c => `<button class="chip${s.loc.name === c[0] ? " on" : ""}" data-act="city" data-name="${c[0]}" data-lat="${c[1]}" data-lng="${c[2]}">${c[0]}</button>`).join("")}<button class="chip${s.loc.name === "موقعي" ? " on" : ""}" data-act="loc-me">موقعي الحالي</button></div>
-    <h3>إشعار عند الأذان</h3>
+    ${A ? `<h3>إشعار عند الأذان</h3>
     <div class="chips">${PRAYERS.map(p => `<button class="chip${s.prayerNotify[p] ? " on" : ""}" data-act="pn" data-p="${p}" aria-pressed="${!!s.prayerNotify[p]}">${PN[p]}</button>`).join("")}</div>
-    <p class="hint">الإشعار فيه زرار «صليت ✓» يعلّم عليها من غير ما تفتح التطبيق.</p></section>
+    <p class="hint">الإشعار فيه زرار «صليت ✓» يعلّم عليها من غير ما تفتح التطبيق.</p>` : ""}</section>
 
-  <section class="card" id="sec-alarm"><div class="head"><h2>منبه الفجر</h2>${sw("alarm-enabled", s.alarm.enabled, "منبه الفجر")}</div>
+  ${A ? "" : `<section class="card"><h2>منبه الفجر والتذكيرات</h2><p class="hint">متاحين في تطبيق الأندرويد بس. ${IS_IOS ? "الآيفون مابيسمحش لتطبيقات الويب ترن منبه أو تبعت تذكير في معاد." : "نسخة الويب مابتقدرش ترن منبه أو تبعت تذكير والصفحة مقفولة."} هنا تقدر تتابع وتعلّم وتضيف تاسكات عادي.</p>${IS_ANDROID ? `<button class="btn wide" data-act="update">نزّل تطبيق الأندرويد</button>` : ""}</section>`}
+  ${A ? `<section class="card" id="sec-alarm"><div class="head"><h2>منبه الفجر</h2>${sw("alarm-enabled", s.alarm.enabled, "منبه الفجر")}</div>
     <p class="hint">بيرن بأعلى صوت، ومفيهوش snooze، ومش بيسكت غير لما تقوم تمسح باركود حاجة بعيدة عن سريرك. مثلاً معجون السنان في الحمام، فتصحى وتغسل سنانك وتتوضا.</p>
     <div class="field"><label for="alarm-offset">يرن قبل أذان الفجر بـ</label><select id="alarm-offset" data-input="alarm-offset">${offsets}</select></div>
     <div class="row"><span>${s.alarm.code ? "الكود متسجل" : "مفيش كود متسجل لسه"}</span><button class="btn sm${s.alarm.code ? " ghost" : ""}" data-act="scan">${s.alarm.code ? "غيّر الكود" : "سجّل الكود"}</button></div>
@@ -352,14 +369,14 @@ function settingsHTML(){
     ${permRow("المنبهات في معادها بالظبط", st.exact, "perm-exact")}
     ${permRow("المنبه يظهر والشاشة مقفولة", st.fullScreen, "perm-full")}
     ${permRow("مايتوقفش عشان توفير البطارية", st.battery, "perm-battery")}
-    <p class="hint">لو موبايلك شاومي أو ريلمي أو أوبو: من إعدادات التطبيق فعّل «التشغيل التلقائي» (Autostart) كمان.</p></section>
+    <p class="hint">لو موبايلك شاومي أو ريلمي أو أوبو: من إعدادات التطبيق فعّل «التشغيل التلقائي» (Autostart) كمان.</p></section>` : ""}
 
-  <section class="card"><h2>نقل البيانات</h2><p class="hint">من التطبيق القديم: افتحه من Chrome، دوس «انسخ بياناتي»، وارجع الصق هنا.</p>
+  <section class="card"><h2>نقل البيانات</h2><p class="hint">كل جهاز بيحفظ بياناته لوحده. عشان تنقل بنودك وإعداداتك وتاريخك من جهاز لجهاز: دوس «انسخ نسخة احتياطية» هناك، والصقها هنا.</p>
     <textarea id="importbox" rows="3" placeholder="الصق هنا" aria-label="البيانات"></textarea>
     <button class="btn wide" data-act="import">استورد</button>
     <button class="btn ghost wide" data-act="backup">انسخ نسخة احتياطية من بياناتك</button></section>
 
-  <section class="card"><h2>عن التطبيق</h2><p class="hint">النسخة ${esc(st.version || "")}</p><button class="btn ghost wide" data-act="check-update">دوّر على تحديث</button></section>`;
+  <section class="card"><h2>عن التطبيق</h2><p class="hint">${A ? "النسخة "+esc(st.version || "") : "نسخة الويب · لابتوب وآيفون"}</p>${A ? `<button class="btn ghost wide" data-act="check-update">دوّر على تحديث</button>` : ""}</section>`;
 }
 
 /* ---------- render ---------- */
@@ -394,7 +411,14 @@ function doImport(){
     if(S.tasks[id] || !t || typeof t.text !== "string") continue;
     S.tasks[id] = {text:t.text, done:!!t.done, createdAt:t.createdAt || Date.now(), doneAt:t.doneAt || null, due:t.due || null}; nt++;
   }
-  save(true); box.value = ""; render(); toast("اتنقل "+ar(nd)+" علامة و"+ar(nt)+" تاسك");
+  let extra = "";
+  if(Array.isArray(o.groups) && o.groups.length && o.settings){
+    const code = S.settings.alarm.code;
+    const n = normalize({groups:o.groups, settings:o.settings});
+    S.groups = n.groups; S.settings = n.settings; S.settings.alarm.code = code; S.welcomed = true;
+    ptCache = {}; extra = " والبنود والإعدادات";
+  }
+  save(true); box.value = ""; render(); toast("اتنقل "+ar(nd)+" علامة و"+ar(nt)+" تاسك"+extra);
 }
 
 function checkUpdate(manual){
@@ -452,7 +476,12 @@ app.addEventListener("click", e => {
       g.items = g.items.filter(x => x.id !== i); confirmDel = null; save(true); render(); toast("البند اتمسح"); break;
     }
     case "city": S.settings.loc = {name:b.dataset.name, lat:+b.dataset.lat, lng:+b.dataset.lng}; ptCache = {}; save(true); render(); toast("المواقيت على "+b.dataset.name); break;
-    case "loc-me": if(A){ A.requestLocation(); toast("بجيب موقعك…") } else toast("متاحة في التطبيق بس"); break;
+    case "loc-me":
+      if(A){ A.requestLocation(); toast("بجيب موقعك…") }
+      else if(navigator.geolocation){ toast("بجيب موقعك…"); navigator.geolocation.getCurrentPosition(pos => window.onNativeLocation({lat:pos.coords.latitude, lng:pos.coords.longitude}), () => window.onNativeLocation(null), {timeout:15000}) }
+      else toast("المتصفح ده مش بيدي الموقع");
+      break;
+    case "install": if(installEvt){ installEvt.prompt(); installEvt.userChoice.finally(() => { installEvt = null; render() }) } break;
     case "pn": { const p = b.dataset.p; S.settings.prayerNotify[p] = !S.settings.prayerNotify[p]; save(true); render(); break }
     case "alarm-enabled": {
       const al = S.settings.alarm; al.enabled = !al.enabled; save(true); render();
@@ -532,6 +561,8 @@ setInterval(() => {
   render();
 }, 30000);
 
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if(view === "today") render() });
+if(!A && "serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
 load(); render(); checkUpdate(false);
 window.__yawmi = {calcTimes, normalize, defaults};
 })();
