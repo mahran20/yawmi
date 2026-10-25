@@ -89,9 +89,20 @@ object Scheduler {
         }
         prefs.edit().putLong("nextAlarm", nextAlarm).apply()
 
-        // A reminder at each adhan
+        // A reminder at each adhan, only for prayers the user keeps in a prayers section
         val pn = st.optJSONObject("prayerNotify")
+        val tracked = mutableSetOf<String>()
+        val allGroups = data.optJSONArray("groups")
+        if (allGroups != null) {
+            for (gi in 0 until allGroups.length()) {
+                val g = allGroups.optJSONObject(gi) ?: continue
+                if (g.optString("kind") != "prayers" && g.optString("id") != "prayers") continue
+                val items = g.optJSONArray("items") ?: continue
+                for (ii in 0 until items.length()) items.optJSONObject(ii)?.str("id")?.let { tracked.add(it) }
+            }
+        }
         PrayerTimes.PRAYERS.forEachIndexed { i, p ->
+            if (p !in tracked) return@forEachIndexed
             if (pn?.optBoolean(p, true) == false) return@forEachIndexed
             var day = today
             var t = millis(today, pt0.getValue(p), zone)
@@ -113,7 +124,7 @@ object Scheduler {
         if (groups != null) {
             outer@ for (gi in 0 until groups.length()) {
                 val g = groups.optJSONObject(gi) ?: continue
-                if (g.optString("id") == "prayers") continue
+                if (g.optString("kind") == "prayers" || g.optString("id") == "prayers") continue
                 val items = g.optJSONArray("items") ?: continue
                 for (ii in 0 until items.length()) {
                     if (ic >= 3900) break@outer

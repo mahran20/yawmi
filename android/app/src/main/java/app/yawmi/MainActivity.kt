@@ -24,6 +24,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.pm.PackageInfoCompat
+import androidx.core.view.WindowCompat
 import androidx.webkit.WebViewAssetLoader
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
@@ -284,6 +285,24 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun openUrl(url: String) {
             open(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+        }
+
+        /** Status bar follows the in-app theme (which can differ from the system theme). */
+        @JavascriptInterface
+        fun setBars(color: String, light: Boolean) {
+            runOnUiThread {
+                try {
+                    val c = android.graphics.Color.parseColor(color)
+                    window.statusBarColor = c
+                    window.navigationBarColor = c
+                    web.setBackgroundColor(c)
+                    val ctl = WindowCompat.getInsetsController(window, window.decorView)
+                    ctl.isAppearanceLightStatusBars = light
+                    ctl.isAppearanceLightNavigationBars = light
+                } catch (e: Exception) {
+                    // keep the theme colors
+                }
+            }
         }
 
         @JavascriptInterface

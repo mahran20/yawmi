@@ -2,12 +2,13 @@
 
 # يومي
 
-تطبيق بسيط لمتابعة يومك: الصلوات الخمس، ورد القرآن والأذكار، غسيل السنان، التمرين والمكملات، وتاسكات ومشاوير اليوم. ومعاه منبه فجر مش بيسكت غير لما تقوم تمسح كود.
+مساحة شخصية لمتابعة يومك: عاداتك وأهدافك ومهامك، زي ما انت عاوزها. ابدأ بصفحة فاضية أو بقوالب جاهزة (الصلوات، القرآن والأذكار، الصحة، العناية الشخصية، تطوير نفسي) وعدّل عليها. ومعاه منبه فجر مش بيسكت غير لما تقوم تمسح كود.
 
 ## المميزات
 
 - **علّم على يومك بدوسة:** كل بند خانة، وعداد بيوريك خلصت كام من كام.
-- **بنودك انت:** غيّر الأسماء، امسح، وضيف أقسام وبنود جديدة.
+- **مساحتك انت:** ضيف وامسح ورتّب أي قسم أو بند، ولكل واحد أيقونة ولون.
+- **المظهر:** تلقائي أو فاتح أو داكن، و٦ ألوان أساسية تختار منها.
 - **مواقيت الصلاة من غير نت:** محسوبة بطريقة الهيئة المصرية العامة للمساحة، لأي مدينة أو لموقعك.
 - **إشعار عند كل أذان** فيه زرار «صليت ✓» يعلّم عليها من غير ما تفتح التطبيق.
 - **تذكير لأي بند** في الساعة اللي تختارها، بس لو لسه ماعلّمتش عليه.
@@ -31,12 +32,13 @@
 
 # Yawmi
 
-A simple daily tracker for the five prayers, Quran and adhkar, brushing teeth, training and supplements, and the day's tasks and errands. It comes with a Fajr alarm that only stops when you get up and scan a code.
+A personal space to track your day: your own habits, goals and tasks. Start from a blank page or from ready-made packs (prayers, Quran and adhkar, health, personal care, self-development) and change anything. It comes with a Fajr alarm that only stops when you get up and scan a code.
 
 ## Features
 
 - **One tap per item**, with a running count of what's done today.
-- **Your own items:** rename, delete, and add sections and items.
+- **Your own space:** add, delete and reorder any section or item, each with its own icon and color.
+- **Appearance:** system, light or dark mode, and 6 accent colors.
 - **Offline prayer times** using the Egyptian General Authority of Survey method, for any city or your location.
 - **A notification at each adhan** with a "Prayed ✓" button that checks it off without opening the app.
 - **Per-item reminders** at a time you choose, sent only if the item isn't checked yet.
