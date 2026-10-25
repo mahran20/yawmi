@@ -1,4 +1,4 @@
-const CACHE="yawmi-v4";
+const CACHE="yawmi-v5";
 const SHELL=["./","index.html","manifest.webmanifest","icon-192.png","icon-512.png","apple-touch-icon.png",
   "fonts/plex-400.woff2","fonts/plex-500.woff2","fonts/plex-600.woff2","fonts/readex-600.woff2","fonts/readex-700.woff2"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting()))});
