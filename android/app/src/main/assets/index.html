@@ -170,6 +170,8 @@ const COLORS = ["green","teal","blue","purple","rose","amber","orange","gray"];
 const COLOR_NAMES = {green:"أخضر",teal:"فيروزي",blue:"أزرق",purple:"بنفسجي",rose:"وردي",amber:"عسلي",orange:"برتقالي",gray:"رمادي"};
 const ACCENTS = ["green","teal","blue","purple","rose","amber"];
 const BG = {light:"#f2f5f3", dark:"#101513"};
+/* Anonymous usage counter (GoatCounter). Sends only a path like /active/iphone, never names, items or history. */
+const GC = "";
 const EMOJIS = ["🕌","📿","📖","🤲","☀️","🌙","🌅","⭐","🪥","🦷","💧","🥛","🥗","🍎","💊","🥤","🏋️","🏃","🚶","🧘","⚽","🚴","😴","🛏️","📚","✍️","🧠","🎧","💻","💼","📞","💰","🛒","🧹","🧺","👨‍👩‍👧","❤️","🎯","✅","🔥","🌱","☕","🚭","📵","🧴","🪴","🗓️","🎨"];
 const ICON = {
   gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
@@ -206,8 +208,8 @@ function defaults(){ return {
   settings:{ name:"", theme:{mode:"system", accent:"green"}, loc:{name:"القاهرة",lat:30.0444,lng:31.2357},
     prayerNotify:{fajr:true,dhuhr:true,asr:true,maghrib:true,isha:true},
     alarm:{enabled:false,offset:15,code:null},
-    nightly:{enabled:true,time:"22:50"} },
-  groups:[], days:{}, tasks:{} }; }
+    nightly:{enabled:true,time:"22:50"}, analytics:true },
+  groups:[], days:{}, tasks:{}, meta:{} }; }
 
 function normalize(o){
   const d = defaults();
@@ -229,7 +231,13 @@ function normalize(o){
   });
   if((o.v || 0) < 3 && o.groups.length) o.onboarded = true;
   if(o.welcomed) { o.onboarded = true; delete o.welcomed }
+  if(typeof o.settings.analytics !== "boolean") o.settings.analytics = true;
+  o.meta = o.meta && typeof o.meta === "object" ? o.meta : {};
   o.days = o.days || {}; o.tasks = o.tasks || {}; o.v = 3;
+  if(!o.meta.installAt){
+    const first = Object.keys(o.days).sort()[0];
+    if(first) o.meta.installAt = new Date(first+"T12:00:00").getTime();
+  }
   return o;
 }
 
@@ -356,7 +364,8 @@ function welcomeHTML(){
   <section class="card"><h2>تحب تبدأ بإيه؟</h2><p class="hint">اختار القوالب اللي تناسبك، أو ابدأ بصفحة فاضية وابني مساحتك بنفسك.</p>
     <div class="packs">${packs}</div>
     <button class="btn wide" data-act="start">${n ? "ابدأ بـ"+ar(n)+" "+(n === 1 ? "قسم" : "أقسام") : "ابدأ بصفحة فاضية"}</button>
-    ${n ? `<button class="btn link" data-act="start-empty">لا، ابدأ بصفحة فاضية</button>` : ""}</section>`;
+    ${n ? `<button class="btn link" data-act="start-empty">لا، ابدأ بصفحة فاضية</button>` : ""}</section>
+  ${GC ? `<p class="hint">بياناتك بتفضل على جهازك. التطبيق بيعدّ بس عدد المستخدمين من غير أي معلومة عنك، وتقدر تقفل ده من الإعدادات.</p>` : ""}`;
 }
 
 /* ---------- today ---------- */
@@ -503,6 +512,8 @@ function settingsHTML(){
     <p class="hint">لو موبايلك شاومي أو ريلمي أو أوبو: من إعدادات التطبيق فعّل «التشغيل التلقائي» (Autostart) كمان.</p></section>`
   : `<section class="card"><h2>منبه الفجر والتذكيرات</h2><p class="hint">متاحين في تطبيق الأندرويد بس. ${IS_IOS ? "الآيفون مابيسمحش لتطبيقات الويب ترن منبه أو تبعت تذكير في معاد." : "نسخة الويب مابتقدرش ترن منبه أو تبعت تذكير والصفحة مقفولة."}</p>${IS_ANDROID ? `<button class="btn wide" data-act="update">نزّل تطبيق الأندرويد</button>` : ""}</section>`}
 
+  ${GC ? `<section class="card"><div class="head"><h2>إحصائيات مجهولة</h2>${sw("analytics", s.analytics, "إحصائيات مجهولة")}</div><p class="hint">لما تكون شغالة، التطبيق بيبعت مرة في اليوم إنه «اتفتح على ${platform() === "laptop" ? "لابتوب" : platform() === "iphone" ? "آيفون" : "أندرويد"}». من غير اسمك ولا بنودك ولا أي حاجة عنك. ده بيساعدنا نعرف كام واحد بيستخدم التطبيق.</p></section>` : ""}
+
   <section class="card"><h2>بياناتك</h2><p class="hint">بياناتك محفوظة على الجهاز ده بس، ومحدش غيرك يقدر يشوفها. عشان تنقلها لجهاز تاني: انسخ نسخة احتياطية هنا والصقها هناك.</p>
     <button class="btn ghost wide" data-act="backup">انسخ نسخة احتياطية</button>
     <textarea id="importbox" rows="3" placeholder="الصق نسخة احتياطية هنا" aria-label="نسخة احتياطية"></textarea>
@@ -510,6 +521,30 @@ function settingsHTML(){
     <button class="btn danger wide" data-act="reset">${confirmDel === "__reset" ? "متأكد؟ دوس تاني وكل حاجة هتتمسح" : "امسح كل حاجة وابدأ من الأول"}</button></section>
 
   <section class="card"><h2>عن التطبيق</h2><p class="hint">${A ? "النسخة "+esc(st.version || "") : "نسخة الويب · لابتوب وآيفون"}</p>${A ? `<button class="btn ghost wide" data-act="check-update">دوّر على تحديث</button>` : ""}</section>`;
+}
+
+/* ---------- anonymous counter ---------- */
+function platform(){ return A ? "android-app" : IS_IOS ? "iphone" : IS_ANDROID ? "android-web" : "laptop" }
+function ping(path){
+  if(!GC || !S.settings.analytics || navigator.onLine === false) return;
+  try{ const img = new Image(); img.src = GC+"?p="+encodeURIComponent(path)+"&t=yawmi&rnd="+Math.random().toString(36).slice(2) }catch(e){}
+}
+function track(){
+  if(!GC || !S.settings.analytics || navigator.onLine === false) return;
+  const m = S.meta || (S.meta = {}); m.sent = Array.isArray(m.sent) ? m.sent : [];
+  const now = Date.now(), k = keyOf(new Date());
+  let changed = false;
+  if(!m.counted){ m.counted = true; if(!m.installAt) m.installAt = now; ping("/install/"+platform()); changed = true }
+  if(m.lastPing !== k){
+    m.lastPing = k; ping("/active/"+platform());
+    const days = Math.floor((now - m.installAt) / 864e5);
+    for(const [w,d] of [[1,7],[2,14],[4,28],[8,56]]){
+      const tag = "w"+w;
+      if(days >= d && days < d + 7 && !m.sent.includes(tag)){ m.sent.push(tag); ping("/retained/"+tag) }
+    }
+    changed = true;
+  }
+  if(changed) save(true);
 }
 
 /* ---------- render ---------- */
@@ -592,6 +627,7 @@ function onClick(e){
       if(v) S.settings.name = v.slice(0,30);
       S.groups = act === "start" ? Object.keys(PACKS).filter(k => picked[k]).map(groupFromPack) : [];
       S.onboarded = true; view = "today"; save(true); render(); window.scrollTo(0,0);
+      ping("/start/"+(S.groups.length ? "template" : "empty")); S.groups.forEach(g => { if(g.pack) ping("/pack/"+g.pack) });
       if(A && !status.notifications && S.groups.length) A.requestNotifications();
       break;
     }
@@ -662,6 +698,7 @@ function onClick(e){
       if(al.enabled) toast(al.code ? "المنبه اتظبط" : "سجّل الكود عشان المنبه يشتغل صح");
       break;
     }
+    case "analytics": S.settings.analytics = !S.settings.analytics; save(true); render(); break;
     case "nightly-enabled": S.settings.nightly.enabled = !S.settings.nightly.enabled; save(true); render(); break;
     case "scan": if(A) A.scanCode(); break;
     case "test-alarm": if(A){ A.testAlarm(20); toast("المنبه هيرن بعد ٢٠ ثانية. اقفل الشاشة.") } break;
@@ -670,11 +707,11 @@ function onClick(e){
     case "perm-full": if(A) A.openFullScreenSettings(); break;
     case "perm-battery": if(A) A.requestBattery(); break;
     case "import": doImport(); break;
-    case "backup": flush(); copyText(JSON.stringify(S)); break;
+    case "backup": { flush(); const b = Object.assign({}, S); delete b.meta; copyText(JSON.stringify(b)); break }
     case "reset": {
       if(confirmDel !== "__reset"){ armConfirm("__reset"); break }
-      confirmDel = null; const theme = S.settings.theme;
-      S = defaults(); S.settings.theme = theme; picked = {prayers:true, quran:true};
+      confirmDel = null; const theme = S.settings.theme, meta = S.meta, an = S.settings.analytics;
+      S = defaults(); S.settings.theme = theme; S.meta = meta; S.settings.analytics = an; picked = {prayers:true, quran:true};
       save(true); applyTheme(); render(); window.scrollTo(0,0); break;
     }
     case "check-update": checkUpdate(true); break;
@@ -721,7 +758,7 @@ window.onNativeResume = () => {
   flush(); load(); ptCache = {}; applyTheme();
   const t = logicalToday();
   if(keyOf(t) !== keyOf(today)){ if(keyOf(sel) === keyOf(today)) sel = new Date(t); today = t }
-  render(); checkUpdate(false);
+  render(); checkUpdate(false); track();
 };
 window.onNativeScan = code => {
   if(!code){ toast("ماتسجلش كود"); return }
@@ -745,7 +782,7 @@ setInterval(() => {
 
 window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if(view === "today") render() });
 if(!A && "serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
-load(); applyTheme(); render(); checkUpdate(false);
+load(); applyTheme(); render(); checkUpdate(false); track();
 window.__yawmi = {calcTimes, normalize, defaults};
 })();
 </script>

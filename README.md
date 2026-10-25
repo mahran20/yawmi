@@ -14,7 +14,7 @@
 - **تذكير لأي بند** في الساعة اللي تختارها، بس لو لسه ماعلّمتش عليه.
 - **تاسكات ومشاوير** بتفضل موجودة لحد ما تخلصها، ومعاها تذكير اختياري.
 - **منبه الفجر:** بيرن بأعلى صوت ومفيهوش snooze، ومش بيسكت غير لما تمسح QR أو باركود متعلّق بعيد عن سريرك. وفيه بديل طوارئ بمسائل حساب عشان ماتتقفلش برة.
-- **خصوصية:** كل بياناتك على جهازك بس. مفيش حساب ولا سيرفر.
+- **خصوصية:** كل بياناتك على جهازك بس. مفيش حساب ولا تسجيل دخول. التطبيق بيبعت مرة في اليوم إشارة مجهولة فيها نوع الجهاز بس (أندرويد، آيفون، لابتوب) عشان نعرف عدد المستخدمين، وتقدر تقفلها من الإعدادات.
 
 ## التثبيت
 
@@ -44,7 +44,7 @@ A personal space to track your day: your own habits, goals and tasks. Start from
 - **Per-item reminders** at a time you choose, sent only if the item isn't checked yet.
 - **Tasks and errands** that stay until done, with an optional reminder.
 - **Fajr alarm:** full volume, no snooze, stops only when you scan a QR or barcode placed away from your bed. A math-problem fallback means you can never get locked out.
-- **Private:** all data stays on your device. No account, no server.
+- **Private:** your data stays on your device. No account, no login. Once a day the app sends an anonymous ping with only the device type (Android, iPhone, laptop) so we can count users. You can turn it off in Settings.
 
 ## Install
 
