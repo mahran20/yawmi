@@ -7,3 +7,6 @@ android/build.log
 .idea/
 *.jks
 !*.jks.enc
+__pycache__/
+*.pyc
+.pytest_cache/
