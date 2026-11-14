@@ -47,8 +47,8 @@ class AlarmActivity : AppCompatActivity() {
     private var done = false
     private var test = false
 
-    private val bg = 0xFF0F1A17.toInt()
-    private val mint = 0xFF6CC2AB.toInt()
+    private val bg = 0xFF141C38.toInt()
+    private val mint = 0xFFF4B266.toInt()
     private val white = 0xFFFFFFFF.toInt()
     private val soft = 0xFFC9DDD5.toInt()
     private val M = ViewGroup.LayoutParams.MATCH_PARENT
@@ -93,6 +93,12 @@ class AlarmActivity : AppCompatActivity() {
         recreate()
     }
 
+    /** Night to first light, the same sky as the app's Fajr card. */
+    private fun dawnSky(): GradientDrawable = GradientDrawable(
+        GradientDrawable.Orientation.TOP_BOTTOM,
+        intArrayOf(0xFF141C38.toInt(), 0xFF24346B.toInt(), 0xFF6D4D63.toInt(), 0xFFC9783A.toInt())
+    )
+
     private fun stopRing() {
         stopService(Intent(this, AlarmService::class.java))
     }
@@ -112,7 +118,7 @@ class AlarmActivity : AppCompatActivity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setBackgroundColor(bg)
+            background = dawnSky()
             layoutDirection = View.LAYOUT_DIRECTION_RTL
         }
         root.addView(label(18f, mint).apply { text = "تذكير" })
@@ -175,7 +181,7 @@ class AlarmActivity : AppCompatActivity() {
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
-            setBackgroundColor(bg)
+            background = dawnSky()
             setPadding(dp(24), dp(40), dp(24), dp(24))
             layoutDirection = View.LAYOUT_DIRECTION_RTL
         }
@@ -300,7 +306,11 @@ class AlarmActivity : AppCompatActivity() {
     private fun dismiss() {
         done = true
         stopRing()
-        if (!test) Scheduler.followUp(this)
+        if (!test) {
+            val now = java.time.LocalDateTime.now()
+            Store.setWake(this, now.toLocalDate().toString(), String.format(java.util.Locale.US, "%02d:%02d", now.hour, now.minute))
+            Scheduler.followUp(this)
+        }
         scanner?.pause()
         scanner?.visibility = View.GONE
         mathBox.visibility = View.GONE

@@ -318,6 +318,20 @@ class MainActivity : AppCompatActivity() {
         }
 
         @JavascriptInterface
+        fun share(text: String) {
+            runOnUiThread {
+                try {
+                    val i = Intent(Intent.ACTION_SEND).setType("text/plain")
+                        .putExtra(Intent.EXTRA_SUBJECT, "نسخة احتياطية من يومي")
+                        .putExtra(Intent.EXTRA_TEXT, text)
+                    startActivity(Intent.createChooser(i, "ابعت النسخة الاحتياطية"))
+                } catch (e: Exception) {
+                    // nothing to share with
+                }
+            }
+        }
+
+        @JavascriptInterface
         fun copy(text: String) {
             runOnUiThread {
                 getSystemService(ClipboardManager::class.java)

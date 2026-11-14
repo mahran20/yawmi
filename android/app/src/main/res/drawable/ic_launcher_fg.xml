@@ -1,11 +1,10 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="108dp" android:height="108dp"
     android:viewportWidth="108" android:viewportHeight="108">
-    <path
-        android:fillColor="#00000000"
-        android:strokeColor="#FFFFFFFF"
-        android:strokeWidth="7"
-        android:strokeLineCap="round"
-        android:strokeLineJoin="round"
-        android:pathData="M38,55 L49,66 L71,43" />
+    <!-- half sun rising over the horizon: the moment of Fajr -->
+    <path android:fillColor="#FFF4B266" android:pathData="M38,64 A16,16 0 0,1 70,64 Z" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFF4B266" android:strokeWidth="4" android:strokeLineCap="round"
+        android:pathData="M54,36 L54,42 M35.5,44.5 L39.8,48.8 M72.5,44.5 L68.2,48.8" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeWidth="4" android:strokeLineCap="round"
+        android:pathData="M30,68 L78,68" />
 </vector>

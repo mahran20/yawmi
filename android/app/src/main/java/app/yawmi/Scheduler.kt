@@ -163,6 +163,27 @@ object Scheduler {
             }
         }
 
+        // Bedtime: sleep enough hours before the next Fajr (or the alarm), reminded 30 minutes earlier
+        val fajrSt = st.optJSONObject("fajr")
+        if (tracked.contains("fajr") && (fajrSt == null || fajrSt.optBoolean("bedtime", true))) {
+            val hours = (fajrSt?.optInt("sleepHours", 7) ?: 7).coerceIn(5, 9)
+            val alarmOn = alarm != null && alarm.optBoolean("enabled", false)
+            val lead = if (alarmOn) alarm!!.optInt("offset", 15) else 10
+            for (d in listOf(tomorrow, tomorrow.plusDays(1))) {
+                val pt = PrayerTimes.compute(d, lat, lng, zone)
+                val wake = millis(d, pt.getValue("fajr"), zone) - lead * 60_000L
+                val bed = wake - hours * 3_600_000L
+                val t = bed - 30 * 60_000L
+                if (t <= soon) continue
+                val z = Instant.ofEpochMilli(bed).atZone(zone)
+                val h12 = if (z.hour % 12 == 0) 12 else z.hour % 12
+                val time = Notifs.ar(h12) + ":" + (if (z.minute < 10) "٠" else "") + Notifs.ar(z.minute) + (if (z.hour < 12) " ص" else " م")
+                remind(ctx, am, 4100, t, "bedtime", "", "", "جهّز نفسك للنوم", "عشان تصحى للفجر مرتاح، نام الساعة $time (${Notifs.ar(hours)} ساعات نوم)")
+                codes.add(4100)
+                break
+            }
+        }
+
         // End-of-day check-in
         val nightly = st.optJSONObject("nightly")
         if (nightly == null || nightly.optBoolean("enabled", true)) {
@@ -226,6 +247,7 @@ object Scheduler {
         codes.add(CODE_TICK)
 
         prefs.edit().putString("codes", codes.joinToString(",")).apply()
+        Widget.updateAll(ctx)
     }
 
     private fun setExact(ctx: Context, am: AlarmManager, t: Long, pi: PendingIntent, exact: Boolean = true) {

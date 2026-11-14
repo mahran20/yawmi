@@ -20,7 +20,7 @@ object Notifs {
     const val CH_ALARM = "fajr_alarm"
     const val CH_PRAYER = "prayers"
     const val CH_REMIND = "reminders"
-    private const val COLOR = 0xFF1F6B5C.toInt()
+    private const val COLOR = 0xFF24346B.toInt()
 
     private val arFormat: NumberFormat = NumberFormat.getInstance(Locale.forLanguageTag("ar-EG"))
     fun ar(n: Int): String = arFormat.format(n.toLong())

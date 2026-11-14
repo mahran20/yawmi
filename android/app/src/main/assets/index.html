@@ -12,18 +12,20 @@
 @font-face{font-family:"Readex";src:url(fonts/readex-700.woff2) format("woff2");font-weight:700;font-display:swap}
 /* Layout: one RTL column. Views: onboarding, today, edit (your space), reports, settings. A bottom sheet edits look, schedule and tasks. */
 :root{
-  --bg:#f2f5f3; --surface:#ffffff; --ink:#17201b; --muted:#5d6a63; --line:#dbe2dd;
+  --bg:#f3f5f9; --surface:#ffffff; --ink:#141a2e; --muted:#5e6680; --line:#dde2ec;
   --accent-ink:#ffffff; --warn:#8a5410; --warn-soft:#fbefd9; --danger:#b4432f; --danger-soft:#f8e3de;
-  --h-green:#1f6b5c; --h-teal:#0e6f7a; --h-blue:#2457a6; --h-purple:#6a43a8; --h-rose:#a83a5c; --h-amber:#93590c; --h-orange:#b8521c; --h-gray:#56635c;
-  --accent:var(--h-green);
+  --h-night:#24346b; --h-green:#1f6b5c; --h-teal:#0e6f7a; --h-blue:#2457a6; --h-purple:#6a43a8; --h-rose:#a83a5c; --h-amber:#93590c; --h-orange:#b8521c; --h-gray:#59607a;
+  --dawn:#e0892f; --dawn-soft:#fbeedd;
+  --accent:var(--h-night);
   --accent-soft:color-mix(in srgb,var(--accent) 13%,var(--surface));
   --display:"Readex","Segoe UI",Tahoma,sans-serif; --body:"Plex Ar","Segoe UI",Tahoma,sans-serif;
   color-scheme:light;
 }
 :root[data-theme="dark"]{
-  --bg:#101513; --surface:#19201d; --ink:#e6ece8; --muted:#95a29b; --line:#2a3430;
-  --accent-ink:#0d1512; --warn:#f0bf6e; --warn-soft:#3a2c14; --danger:#ee8a76; --danger-soft:#3b211c;
-  --h-green:#6cc2ab; --h-teal:#62c6d1; --h-blue:#86aef0; --h-purple:#b99be9; --h-rose:#ef8fae; --h-amber:#efb560; --h-orange:#f2995f; --h-gray:#a6b2ab;
+  --bg:#0e1324; --surface:#171d33; --ink:#e8ecf6; --muted:#98a1bc; --line:#262e48;
+  --accent-ink:#0e1324; --warn:#f0bf6e; --warn-soft:#3a2c14; --danger:#ee8a76; --danger-soft:#3b211c;
+  --h-night:#a9bbf2; --h-green:#6cc2ab; --h-teal:#62c6d1; --h-blue:#86aef0; --h-purple:#b99be9; --h-rose:#ef8fae; --h-amber:#efb560; --h-orange:#f2995f; --h-gray:#a3aac0;
+  --dawn:#f4b266; --dawn-soft:#3a2a17;
   color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -182,6 +184,41 @@ details ul{margin-top:6px}
 .ritem small{grid-column:1 / 3;color:var(--muted);font-size:.78rem;margin-top:-2px}
 .range{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
 .range label{display:flex;flex-direction:column;gap:4px;font-size:.82rem;color:var(--muted)}
+/* Fajr hero: the dawn sky, same in both themes on purpose */
+.fajr{border-radius:20px;padding:16px;color:#fff;background:linear-gradient(170deg,#141c38 0%,#24346b 55%,#6d4d63 85%,#c9783a 118%);display:flex;flex-direction:column;gap:12px;box-shadow:0 8px 24px rgba(20,28,56,.18)}
+.fajr .r1{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.fajr .lbl{font-size:.84rem;opacity:.85;display:block}
+.fajr .big{font-family:var(--display);font-size:1.75rem;font-weight:700;line-height:1.2}
+.fajr .left{font-size:.9rem;opacity:.9}
+.fajr .st{font-weight:600;color:#f4b266}
+.fdots{display:flex;gap:6px;align-items:center}
+.fdots span{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.3);display:grid;place-items:center;font-size:.62rem;color:rgba(255,255,255,.75)}
+.fdots span.ok{background:#f4b266;border-color:#f4b266;color:#1b2547;font-weight:700}
+.fdots span.late{border-color:#f4b266;background:rgba(244,178,102,.22);color:#fff}
+.fdots span.now{box-shadow:0 0 0 2px #141c38,0 0 0 4px rgba(255,255,255,.7)}
+.fmeta{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.85rem;opacity:.95}
+.fmeta b{color:#f4b266;font-weight:600}
+.fbtns{display:flex;gap:8px;flex-wrap:wrap}
+.fbtn{border:0;border-radius:11px;padding:9px 14px;font-weight:600;background:#f4b266;color:#141c38;min-height:40px}
+.fbtn.ghost{background:rgba(255,255,255,.14);color:#fff}
+.fchal{display:flex;flex-direction:column;gap:6px;font-size:.85rem}
+.fchal .bar{height:8px;border-radius:999px;background:rgba(255,255,255,.18);overflow:hidden}
+.fchal .bar span{display:block;height:100%;background:#f4b266;border-radius:999px}
+.nextp{font-size:.84rem;opacity:.85;border-top:1px solid rgba(255,255,255,.15);padding-top:10px}
+.tile .qbar{position:absolute;left:0;bottom:0;height:4px;background:var(--c,var(--accent));border-radius:0 0 0 12px}
+.tile .st{font-size:.72rem;color:var(--dawn);font-weight:600}
+.heat{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,15px);grid-auto-columns:15px;gap:3px;direction:ltr;overflow-x:auto;padding-bottom:4px}
+.heat i{border-radius:4px;background:var(--bg);border:1px solid var(--line)}
+.heat i.d{background:var(--c,var(--accent));border-color:transparent}
+.heat i.o{background:transparent;border-style:dashed;opacity:.6}
+.heat i.f{visibility:hidden}
+.legend{display:flex;gap:12px;font-size:.78rem;color:var(--muted);align-items:center;flex-wrap:wrap}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-inline-end:4px;vertical-align:-1px;border:1px solid var(--line);background:var(--bg)}
+.legend i.d{background:var(--c,var(--accent));border-color:transparent}
+.legend i.o{border-style:dashed;background:transparent}
+.fcard{border-color:color-mix(in srgb,var(--dawn) 45%,var(--line))}
+.fcard .kpi strong{color:var(--dawn)}
+.ritem.click{cursor:pointer;background:none;border:0;padding:0;text-align:start;width:100%;color:inherit}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:.92rem;max-width:calc(100% - 32px);text-align:center;z-index:10;box-shadow:0 6px 20px rgba(0,0,0,.18)}
 @media (prefers-reduced-motion:no-preference){.tile,.task .chk,.chip,.opt,.seg button{transition:background-color .15s,border-color .15s}}
 </style>
@@ -217,13 +254,14 @@ const DOW_S = ["ح","ن","ث","ر","خ","ج","س"];
 const APK = "https://github.com/mahran20/yawmi/releases/latest/download/yawmi.apk";
 const PRIVACY = "https://mahran20.github.io/yawmi/privacy.html";
 const CITIES = [["القاهرة",30.0444,31.2357],["الجيزة",30.0131,31.2089],["الإسكندرية",31.2001,29.9187],["المنصورة",31.0409,31.3785],["طنطا",30.7865,31.0004],["أسيوط",27.1810,31.1837],["الأقصر",25.6872,32.6396],["أسوان",24.0889,32.8998]];
-const COLORS = ["green","teal","blue","purple","rose","amber","orange","gray"];
-const COLOR_NAMES = {green:"أخضر",teal:"فيروزي",blue:"أزرق",purple:"بنفسجي",rose:"وردي",amber:"عسلي",orange:"برتقالي",gray:"رمادي"};
-const ACCENTS = ["green","teal","blue","purple","rose","amber"];
-const BG = {light:"#f2f5f3", dark:"#101513"};
+const COLORS = ["night","green","teal","blue","purple","rose","amber","orange","gray"];
+const COLOR_NAMES = {night:"ليلي",green:"أخضر",teal:"فيروزي",blue:"أزرق",purple:"بنفسجي",rose:"وردي",amber:"عسلي",orange:"برتقالي",gray:"رمادي"};
+const ACCENTS = ["night","green","teal","blue","purple","rose"];
+const BG = {light:"#f3f5f9", dark:"#0e1324"};
+const TAGLINE = "يومك بيبدأ من الفجر";
 /* Anonymous usage counter (GoatCounter). Sends only a path like /active/iphone, never names, items or history. */
 const GC = "https://mahran.goatcounter.com/count";
-const EMOJIS = ["🕌","📿","📖","🤲","☀️","🌙","🌅","⭐","🪥","🦷","💧","🥛","🥗","🍎","💊","🥤","🏋️","🏃","🚶","🧘","⚽","🚴","😴","🛏️","📚","✍️","🧠","🎧","💻","💼","📞","💰","🛒","🧹","🧺","👨‍👩‍👧","❤️","🎯","✅","🔥","🌱","☕","🚭","📵","🧴","🪴","🗓️","🎨"];
+const EMOJIS = ["🌅","🕌","📿","📖","🤲","☀️","🌙","🌅","⭐","🪥","🦷","💧","🥛","🥗","🍎","💊","🥤","🏋️","🏃","🚶","🧘","⚽","🚴","😴","🛏️","📚","✍️","🧠","🎧","💻","💼","📞","💰","🛒","🧹","🧺","👨‍👩‍👧","❤️","🎯","✅","🔥","🌱","☕","🚭","📵","🧴","🪴","🗓️","🎨"];
 const ICON = {
   gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
   edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
@@ -234,14 +272,15 @@ const ICON = {
 
 /* ---------- templates ---------- */
 const PACKS = {
-  prayers:{title:"الصلوات", desc:"الخمس صلوات بمواقيتها", icon:"🕌", color:"green", kind:"prayers", items:PRAYERS.map(p => ({id:p, label:PN[p]}))},
+  prayers:{title:"الصلوات", desc:"الخمس صلوات بمواقيتها", icon:"🕌", color:"night", kind:"prayers", items:PRAYERS.map(p => ({id:p, label:PN[p]}))},
   quran:{title:"القرآن والأذكار", desc:"الورد، أذكار الصباح والمساء", icon:"📖", color:"teal", items:[{label:"ورد القرآن", icon:"📖"},{label:"أذكار الصباح", icon:"☀️"},{label:"أذكار المساء", icon:"🌙"}]},
-  health:{title:"الصحة", desc:"رياضة، مية، نوم بدري", icon:"💪", color:"orange", items:[{label:"رياضة", icon:"🏋️", sched:{type:"weekly", times:3}},{label:"مية كفاية", icon:"💧"},{label:"نوم بدري", icon:"😴"}]},
+  health:{title:"الصحة", desc:"رياضة، مية، نوم بدري", icon:"💪", color:"orange", items:[{label:"رياضة", icon:"🏋️", sched:{type:"weekly", times:3}},{label:"مية", icon:"💧", target:8, unit:"كوباية"},{label:"نوم بدري", icon:"😴"}]},
   care:{title:"العناية الشخصية", desc:"غسيل السنان الصبح وبالليل", icon:"🪥", color:"blue", items:[{label:"السنان الصبح", icon:"🪥"},{label:"السنان بالليل", icon:"🪥"}]},
-  growth:{title:"تطوير نفسي", desc:"قراية وتعلّم", icon:"📚", color:"purple", items:[{label:"قراية ١٠ صفحات", icon:"📚"},{label:"تعلّم حاجة جديدة", icon:"🧠"}]}
+  growth:{title:"تطوير نفسي", desc:"قراية وتعلّم", icon:"📚", color:"purple", items:[{label:"قراية", icon:"📚", target:10, unit:"صفحة"},{label:"تعلّم حاجة جديدة", icon:"🧠"}]},
+  ramadan:{title:"رمضان", desc:"صيام، تراويح، ختمة", icon:"🌙", color:"amber", items:[{label:"صيام", icon:"🌙"},{label:"سحور", icon:"🥛"},{label:"تراويح", icon:"🕌"},{label:"ورد الختمة", icon:"📖", target:20, unit:"صفحة"},{label:"صدقة", icon:"🤲"}]}
 };
-function mkItem(i){ return {id:i.id || uid("i"), label:i.label, icon:i.icon || null, sched:i.sched || null, createdAt:Date.now()} }
-function mkGroup(o){ return {id:o.id || uid("g"), pack:o.pack || null, kind:o.kind || null, title:o.title, icon:o.icon || null, color:o.color || "green", sched:o.sched || null, createdAt:Date.now(), items:(o.items || []).map(mkItem)} }
+function mkItem(i){ const o = {id:i.id || uid("i"), label:i.label, icon:i.icon || null, sched:i.sched || null, createdAt:Date.now()}; if(i.target > 1){ o.target = i.target; o.unit = i.unit || "" } return o }
+function mkGroup(o){ return {id:o.id || uid("g"), pack:o.pack || null, kind:o.kind || null, title:o.title, icon:o.icon || null, color:o.color || "night", sched:o.sched || null, createdAt:Date.now(), items:(o.items || []).map(mkItem)} }
 function groupFromPack(key){ const p = PACKS[key]; return mkGroup(Object.assign({}, p, {id: key === "prayers" ? "prayers" : null, pack:key})) }
 
 /* Legacy layout (the first version of the app) used only to migrate old data. */
@@ -254,8 +293,8 @@ const LEGACY = [
 const LEGACY_STYLE = {prayers:["🕌","green"], dhikr:["📖","teal"], teeth:["🪥","blue"], supps:["🏋️","orange"]};
 
 function defaults(){ return {
-  v:4, onboarded:false,
-  settings:{ name:"", theme:{mode:"system", accent:"green"}, loc:{name:"القاهرة",lat:30.0444,lng:31.2357},
+  v:5, onboarded:false,
+  settings:{ name:"", theme:{mode:"system", accent:"night"}, fajr:{sleepHours:7, bedtime:true, challenge:null}, loc:{name:"القاهرة",lat:30.0444,lng:31.2357},
     prayerNotify:{fajr:true,dhuhr:true,asr:true,maghrib:true,isha:true},
     alarm:{enabled:false,offset:15,code:null},
     nightly:{enabled:true,time:"22:50"}, analytics:true, weekStart:6,
@@ -274,8 +313,10 @@ function normalize(o){
   const s = o.settings || {};
   o.settings = Object.assign(d.settings, s);
   const fresh = defaults().settings;
-  for(const k of ["theme","loc","prayerNotify","alarm","nightly","nag"]) o.settings[k] = Object.assign(fresh[k], s[k] || {});
-  if(!COLORS.includes(o.settings.theme.accent)) o.settings.theme.accent = "green";
+  for(const k of ["theme","loc","prayerNotify","alarm","nightly","nag","fajr"]) o.settings[k] = Object.assign(fresh[k], s[k] || {});
+  if((o.v || 0) < 5 && o.settings.theme.accent === "green") o.settings.theme.accent = "night";
+  if(!COLORS.includes(o.settings.theme.accent)) o.settings.theme.accent = "night";
+  o.settings.fajr.sleepHours = Math.max(5, Math.min(9, +o.settings.fajr.sleepHours || 7));
   if(!["system","light","dark"].includes(o.settings.theme.mode)) o.settings.theme.mode = "system";
   if(typeof o.settings.analytics !== "boolean") o.settings.analytics = true;
   if(![0,1,6].includes(+o.settings.weekStart)) o.settings.weekStart = 6; else o.settings.weekStart = +o.settings.weekStart;
@@ -288,12 +329,12 @@ function normalize(o){
     if(!g.icon && st) g.icon = st[0];
     if(!g.color) g.color = st ? st[1] : COLORS[i % COLORS.length];
     g.sched = g.kind === "prayers" ? null : validSched(g.sched);
-    g.items.forEach(it => { it.sched = validSched(it.sched) });
+    g.items.forEach(it => { it.sched = validSched(it.sched); if(!(it.target > 1)){ delete it.target; delete it.unit } else it.target = Math.min(99, Math.round(it.target)) });
   });
   if((o.v || 0) < 3 && o.groups.length) o.onboarded = true;
   if(o.welcomed){ o.onboarded = true; delete o.welcomed }
   o.meta = o.meta && typeof o.meta === "object" ? o.meta : {};
-  o.days = o.days || {}; o.tasks = o.tasks || {}; o.v = 4;
+  o.days = o.days || {}; o.tasks = o.tasks || {}; o.v = 5;
   for(const t of Object.values(o.tasks)){ if(t && t.nag === undefined) t.nag = true }
   if(!o.meta.installAt){
     const first = Object.keys(o.days).sort()[0];
@@ -416,6 +457,70 @@ function daysText(days){
 }
 function schedText(s){ if(!s) return "كل يوم"; if(s.type === "days") return daysText(s.days); return ar(s.times)+" "+(s.times <= 2 ? "مرة" : "مرات")+" في الأسبوع" }
 
+/* ---------- Fajr ---------- */
+const atHM = (d, hm) => { const [h,m] = hm.split(":").map(Number); const x = new Date(d); x.setHours(h, m, 0, 0); return x };
+function fajrTracked(){ return trackedPrayers().has("fajr") }
+function fajrState(k){ const d = S.days[k] || {}; if(!(d.checks || {}).fajr) return null; return (d.fajr && d.fajr.s) || "ontime" }
+function fajrWake(k){ const d = S.days[k] || {}; return d.fajr && d.fajr.wake || null }
+const FAJR_S = {ontime:["🌅","صليته في وقته"], mosque:["🕌","صليته في المسجد"], late:["⏰","صليته متأخر"]};
+function fajrStreak(){
+  const d = new Date(); d.setHours(12,0,0,0);
+  if(!fajrState(keyOf(d))) d.setDate(d.getDate()-1);
+  let n = 0; while(n < 1000 && fajrState(keyOf(d))){ n++; d.setDate(d.getDate()-1) }
+  return n;
+}
+function nextFajr(){
+  const now = new Date(); const d = new Date(); d.setHours(12,0,0,0);
+  let at = atHM(d, ptimes(d).fajr);
+  if(at <= now){ d.setDate(d.getDate()+1); at = atHM(d, ptimes(d).fajr) }
+  return {d, at, hm: ptimes(d).fajr};
+}
+function bedtimeFor(nf){
+  const al = S.settings.alarm;
+  const wake = new Date(nf.at.getTime() - (A && al.enabled ? al.offset : 10) * 60000);
+  return new Date(wake.getTime() - S.settings.fajr.sleepHours * 3600e3);
+}
+function challengeInfo(){
+  const c = S.settings.fajr.challenge; if(!c || !c.start) return null;
+  const start = fromKey(c.start); const now = new Date(); now.setHours(12,0,0,0);
+  const day = Math.floor((now - start)/864e5) + 1;
+  let prayed = 0; for(let i = 0; i < Math.min(40, day); i++){ const x = new Date(start); x.setDate(x.getDate()+i); if(fajrState(keyOf(x))) prayed++ }
+  return {day: Math.min(day, 40), prayed, done: day > 40};
+}
+function fajrHeroHTML(){
+  const nf = nextFajr(), now = new Date();
+  const cal = new Date(); cal.setHours(12,0,0,0); const ck = keyOf(cal);
+  const todayFajr = atHM(cal, ptimes(cal).fajr);
+  const st = fajrState(ck), wake = fajrWake(ck), streak = fajrStreak();
+  let line = "";
+  if(now >= todayFajr){
+    line = st ? `<span class="st">${FAJR_S[st][1]} النهارده ✓</span>` : `<span>صليت الفجر النهارده؟</span>`;
+  } else {
+    const y = new Date(cal); y.setDate(y.getDate()-1); const yst = fajrState(keyOf(y));
+    line = yst ? `<span>امبارح: <span class="st">${FAJR_S[yst][1]}</span></span>` : `<span>تصبح على خير. الفجر الجاي مستنيك</span>`;
+  }
+  const dots = []; for(let i = 6; i >= 0; i--){ const x = new Date(cal); x.setDate(x.getDate()-i); const s2 = fajrState(keyOf(x)); const isNow = i === 0; dots.push(`<span class="${s2 === "late" ? "late" : s2 ? "ok" : ""}${isNow ? " now" : ""}" title="${dayWord(x.getTime())}">${DOW_S[x.getDay()]}</span>`) }
+  const al = S.settings.alarm;
+  const bt = bedtimeFor(nf);
+  const meta = [];
+  if(streak) meta.push(`سلسلة <b>${ar(streak)} ${streak === 1 ? "يوم" : streak <= 10 ? "أيام" : "يوم"}</b>`);
+  if(wake) meta.push(`صحيت <b>${fmt12(wake)}</b>`);
+  if(A && al.enabled && status.nextAlarm) meta.push(`المنبه <b>${fmt12(hmOf(status.nextAlarm))}</b>`);
+  const ch = challengeInfo();
+  const btns = [];
+  if(now >= todayFajr && !st) btns.push(`<button class="fbtn" data-act="fajr-open" data-k="${ck}">صليت الفجر</button>`);
+  if(A && !al.enabled) btns.push(`<button class="fbtn${btns.length ? " ghost" : ""}" data-act="fajr-alarm-on">شغّل منبه الفجر</button>`);
+  if(!ch) btns.push(`<button class="fbtn ghost" data-act="chal-start">ابدأ تحدّي ٤٠ يوم فجر</button>`);
+  const chal = ch ? (ch.done ? `<div class="fchal"><span>خلصت تحدّي الـ٤٠ يوم: صليت <b>${ar(ch.prayed)}</b> من ٤٠ 🌅</span><button class="fbtn ghost" data-act="chal-start">ابدأ تحدّي جديد</button></div>` : `<div class="fchal"><span>تحدّي ٤٠ يوم: اليوم ${ar(ch.day)} · صليت ${ar(ch.prayed)}</span><div class="bar"><span style="width:${Math.round(ch.prayed/40*100)}%"></span></div></div>`) : "";
+  const np = nextPrayer();
+  const npLine = np && np.p !== "fajr" ? `<div class="nextp">الصلاة الجاية: ${PN[np.p]} ${fmt12(np.hm)} · ${fmtLeft(np.at - Date.now())}</div>` : "";
+  return `<section class="fajr" aria-label="الفجر"><div class="r1"><div><span class="lbl">${TAGLINE}</span><span class="big">الفجر ${fmt12(nf.hm)}</span></div><span class="left">${fmtLeft(nf.at - now)}</span></div>
+    <div>${line}</div>
+    <div class="fdots" aria-label="الفجر آخر ٧ أيام">${dots.join("")}</div>
+    <div class="fmeta">${meta.map(m => `<span>${m}</span>`).join("")}<span>نام قبل <b>${fmt12(hmOf(bt))}</b> عشان تنام ${ar(S.settings.fajr.sleepHours)} ساعات</span></div>
+    ${chal}${btns.length ? `<div class="fbtns">${btns.join("")}</div>` : ""}${npLine}</section>`;
+}
+
 /* ---------- helpers ---------- */
 const cvar = c => "--c:var(--h-"+(COLORS.includes(c) ? c : "green")+")";
 function findG(id){ return S.groups.find(g => g.id === id) }
@@ -449,10 +554,11 @@ const GOALS = {
   teeth:{label:"غسيل السنان", icon:"🪥", g:"me"}, read:{label:"قراية", icon:"📚", g:"me"}, learn:{label:"تعلّم حاجة جديدة", icon:"🧠", g:"me"},
   social:{label:"سوشيال ميديا أقل", icon:"📵", g:"me"}, family:{label:"أكلّم أهلي", icon:"👨‍👩‍👧", g:"me", sched:{type:"weekly", times:2}}, sadaqa:{label:"صدقة", icon:"🤲", g:"me", sched:{type:"weekly", times:1}}
 };
-function newOb(mode){ return {mode, step:0, name:S.settings.name || "", work:null, workDays:[0,1,2,3,4], prayers:true, faith:{quran:true, am:true, pm:true}, train:0, supps:{}, goals:{water:true, sleep:true}} }
+function newOb(mode){ return {mode, step:0, name:S.settings.name || "", fajr:"some", fajrAlarm:true, sleep:S.settings.fajr.sleepHours || 7, work:null, workDays:[0,1,2,3,4], prayers:true, faith:{quran:true, am:true, pm:true}, train:0, supps:{}, goals:{water:true, sleep:true}} }
 function obGroups(o){
   const out = [];
   if(o.prayers) out.push(groupFromPack("prayers"));
+  else out.push(mkGroup({id:"prayers", kind:"prayers", title:"الفجر", icon:"🌅", color:"night", items:[{id:"fajr", label:"الفجر"}]}));
   const f = []; if(o.faith.quran) f.push({label:"ورد القرآن", icon:"📖"}); if(o.faith.am) f.push({label:"أذكار الصباح", icon:"☀️"}); if(o.faith.pm) f.push({label:"أذكار المساء", icon:"🌙"});
   if(f.length) out.push(mkGroup({title:"القرآن والأذكار", icon:"📖", color:"teal", items:f}));
   const w = WORK[o.work];
@@ -472,7 +578,7 @@ function obGroups(o){
   return out;
 }
 function obHTML(){
-  const o = ob, N = 6;
+  const o = ob, N = 7;
   const dots = `<div class="dots" aria-hidden="true">${Array.from({length:N}, (_,i) => `<span class="${i === o.step ? "on" : ""}"></span>`).join("")}</div>`;
   const opt = (act, v, on, e, label) => `<button class="opt${on ? " on" : ""}" data-act="${act}" data-v="${v}" aria-pressed="${!!on}"><span class="e" aria-hidden="true">${e}</span>${label}</button>`;
   let body = "";
@@ -480,21 +586,28 @@ function obHTML(){
     body = `<h1>${o.mode === "rebuild" ? "نبني مساحتك من جديد" : "أهلاً بيك في يومي"}</h1><p class="hint">هسألك ٥ أسئلة سريعة، وبعدها أبنيلك مساحة على مقاسك. كل حاجة تقدر تغيّرها بعدين.</p>
       <section class="card"><h2>اسمك إيه؟</h2><input id="ob-name" class="inp" data-input="ob-name" value="${esc(o.name)}" placeholder="اسمك (اختياري)" maxlength="30" autocomplete="off" aria-label="اسمك"></section>`;
   } else if(o.step === 1){
+    body = `<h1>نبدأ بالأهم: الفجر</h1><p class="hint">${TAGLINE}. يومي معمول عشان يساعدك تصحى له وتحافظ عليه.</p>
+      <section class="card"><h2>الفجر عامل معاك إيه؟</h2><div class="opts">${[["good","🌅","بصليه في وقته غالباً"],["some","🌗","ساعات بيفوتني"],["often","😴","بيفوتني كتير"]].map(([k,e,l]) => opt("ob-fajr", k, o.fajr === k, e, l)).join("")}</div>
+      ${A ? opt("ob-fajr-alarm", "1", o.fajrAlarm, "⏰", "عاوز منبه يصحّيني ومايسكتش غير لما أقوم") : `<p class="hint">منبه الفجر متاح في تطبيق الأندرويد.</p>`}
+      <h2>محتاج تنام كام ساعة عشان تصحى مرتاح؟</h2><div class="chips">${[6,7,8].map(n => `<button class="chip${o.sleep === n ? " on" : ""}" data-act="ob-sleep" data-v="${n}">${ar(n)} ساعات</button>`).join("")}</div>
+      <p class="hint">${o.fajr === "often" ? "مش لوحدك. أغلب الناس الفجر بيفوتهم عشان النوم المتأخر، مش الإرادة. هنحسبلك تنام إمتى ونفكّرك." : "هنحسبلك تنام إمتى على حسب الفجر، ونفكّرك قبلها."}</p></section>`;
+  } else if(o.step === 2){
     body = `<h1>بتعمل إيه في يومك؟</h1><section class="card"><div class="opts">${Object.entries(WORK).map(([k,w]) => opt("ob-work", k, o.work === k, w.e, w.label)).join("")}</div>
       ${o.work && o.work !== "none" ? `<h3>أيام ${o.work === "study" ? "الدراسة" : "الشغل"}</h3><div class="days">${[6,0,1,2,3,4,5].map(d => `<button class="chip${o.workDays.includes(d) ? " on" : ""}" data-act="ob-day" data-v="${d}" aria-pressed="${o.workDays.includes(d)}" aria-label="${DOW[d]}">${DOW[d]}</button>`).join("")}</div><p class="hint">بنود ${o.work === "study" ? "الدراسة" : "الشغل"} هتظهرلك في الأيام دي بس، ومش هتتحسب عليك في الإجازة.</p>` : ""}</section>`;
-  } else if(o.step === 2){
-    body = `<h1>الصلاة والأذكار</h1><section class="card">${opt("ob-prayers", "1", o.prayers, "🕌", "أتابع الصلوات الخمس بمواقيتها")}
-      <h3>وكمان</h3><div class="opts">${opt("ob-faith","quran",o.faith.quran,"📖","ورد القرآن")}${opt("ob-faith","am",o.faith.am,"☀️","أذكار الصباح")}${opt("ob-faith","pm",o.faith.pm,"🌙","أذكار المساء")}</div></section>`;
   } else if(o.step === 3){
+    body = `<h1>الصلاة والأذكار</h1><section class="card">${opt("ob-prayers", "1", o.prayers, "🕌", "أتابع الصلوات الخمس كلها، مش الفجر بس")}
+      <h3>وكمان</h3><div class="opts">${opt("ob-faith","quran",o.faith.quran,"📖","ورد القرآن")}${opt("ob-faith","am",o.faith.am,"☀️","أذكار الصباح")}${opt("ob-faith","pm",o.faith.pm,"🌙","أذكار المساء")}</div></section>`;
+  } else if(o.step === 4){
     body = `<h1>الرياضة والصحة</h1><section class="card"><h2>بتتمرن كام يوم في الأسبوع؟</h2>
       <div class="chips">${[0,1,2,3,4,5,6].map(n => `<button class="chip${o.train === n ? " on" : ""}" data-act="ob-train" data-v="${n}">${n ? ar(n) : "مش بتمرن"}</button>`).join("")}</div>
       ${o.train ? `<p class="hint">التمرين هيتحسب «${ar(o.train)} مرات في الأسبوع»، في أي أيام تختارها. مش هيقولك إنك قصّرت في يوم الراحة.</p>` : ""}
       <h2>بتاخد مكملات أو أدوية بانتظام؟</h2><div class="opts">${Object.entries(SUPPS).map(([k,v]) => opt("ob-supp", k, o.supps[k], v[1], v[0])).join("")}</div></section>`;
-  } else if(o.step === 4){
+  } else if(o.step === 5){
     body = `<h1>عاوز تبني إيه كمان؟</h1><section class="card"><p class="hint">اختار اللي يهمك بس. الأقل أحسن من الكتير في الأول.</p><div class="opts">${Object.entries(GOALS).map(([k,v]) => opt("ob-goal", k, o.goals[k], v.icon, v.label)).join("")}</div></section>`;
   } else {
     const gs = obGroups(o);
-    body = `<h1>مساحتك جاهزة${o.name ? " يا "+esc(o.name) : ""}</h1><section class="card"><div class="review">${gs.length ? gs.map(g => `<div class="rg" style="${cvar(g.color)}"><span class="gicon" aria-hidden="true">${g.icon || ""}</span><div><strong>${esc(g.title)}</strong><p>${g.items.map(i => esc(i.label)+(i.sched && i.sched.type === "weekly" ? " ("+schedText(i.sched)+")" : "")).join("، ")}${g.sched ? " · "+schedText(g.sched) : ""}</p></div></div>`).join("") : `<p class="empty">ماختارتش حاجة. هتبدأ بصفحة فاضية وتبني بنفسك.</p>`}</div>
+    const fajrLine = `<div class="rg" style="${cvar("amber")}"><span class="gicon" aria-hidden="true">🌅</span><div><strong>الفجر</strong><p>${A && o.fajrAlarm ? "منبه بيصحّيك · " : ""}تذكير تنام ${ar(o.sleep)} ساعات · سلسلة وتحدّي ٤٠ يوم</p></div></div>`;
+    body = `<h1>مساحتك جاهزة${o.name ? " يا "+esc(o.name) : ""}</h1><section class="card"><div class="review">${fajrLine}${gs.length ? gs.map(g => `<div class="rg" style="${cvar(g.color)}"><span class="gicon" aria-hidden="true">${g.icon || ""}</span><div><strong>${esc(g.title)}</strong><p>${g.items.map(i => esc(i.label)+(i.sched && i.sched.type === "weekly" ? " ("+schedText(i.sched)+")" : "")).join("، ")}${g.sched ? " · "+schedText(g.sched) : ""}</p></div></div>`).join("") : `<p class="empty">ماختارتش حاجة. هتبدأ بصفحة فاضية وتبني بنفسك.</p>`}</div>
       <p class="hint">تقدر تعدّل أي حاجة من زرار القلم ✏️.</p></section>`;
   }
   const last = o.step === N - 1;
@@ -510,11 +623,21 @@ function obHTML(){
 function tileHTML(g, i, on, pt){
   const color = i.color || g.color, s = schedOf(g, i);
   let sub = g.kind === "prayers" && PN[i.id] ? fmt12(pt[i.id]) : (i.sub || (i.time ? fmt12(i.time) : ""));
-  let met = false;
+  let met = false, extra = "", act = "toggle", attrs = `data-id="${esc(i.id)}"`;
   if(s && s.type === "weekly"){ const wc = weekCount(i.id, sel); met = wc >= s.times; sub = ar(wc)+" / "+ar(s.times)+" الأسبوع ده" }
+  if(i.target > 1){
+    const n = Math.min(i.target, ((S.days[keyOf(sel)] || {}).counts || {})[i.id] || (on ? i.target : 0));
+    sub = ar(n)+" / "+ar(i.target)+(i.unit ? " "+i.unit : "");
+    extra = `<span class="qbar" style="width:${Math.round(n/i.target*100)}%"></span>`;
+  }
+  if(g.kind === "prayers" && i.id === "fajr"){
+    act = "fajr-open"; attrs = `data-k="${keyOf(sel)}"`;
+    const fs = fajrState(keyOf(sel)); if(fs) sub = FAJR_S[fs][1].replace("صليته ", "");
+  }
   const top = i.icon ? `<span class="emo" aria-hidden="true">${esc(i.icon)}</span><span class="badge">✓</span>` : `<span class="mark">✓</span>`;
-  return `<button class="tile${on ? " on" : ""}${met ? " met" : ""}" style="${cvar(color)}" data-act="toggle" data-id="${esc(i.id)}" aria-pressed="${on}">${top}<span class="lb">${esc(i.label || "بند")}</span>${sub ? `<small>${esc(sub)}</small>` : ""}</button>`;
+  return `<button class="tile${on ? " on" : ""}${met ? " met" : ""}" style="${cvar(color)}" data-act="${act}" ${attrs} aria-pressed="${on}">${top}<span class="lb">${esc(i.label || "بند")}</span>${sub ? `<small>${esc(sub)}</small>` : ""}${extra}</button>`;
 }
+function itemById(id){ for(const g of S.groups) for(const i of g.items) if(i.id === id) return i; return null }
 function dayCounts(d){
   const rec = (S.days[keyOf(d)] || {}).checks || {};
   let total = 0, done = 0;
@@ -558,7 +681,7 @@ function todayHTML(){
 
   const np = nextPrayer();
   const al = S.settings.alarm;
-  const pbar = np ? `<section class="prayerbar" aria-label="الصلاة الجاية"><span class="np-label">الصلاة الجاية</span><div class="np"><strong>${PN[np.p]} ${fmt12(np.hm)}</strong><span class="left">${fmtLeft(np.at - Date.now())}</span></div>${A && al.enabled && status.nextAlarm ? `<span class="alarmline">منبه الفجر: ${fmtWhen(status.nextAlarm)}</span>` : ""}</section>` : "";
+  const pbar = fajrTracked() ? fajrHeroHTML() : np ? `<section class="prayerbar" aria-label="الصلاة الجاية"><span class="np-label">الصلاة الجاية</span><div class="np"><strong>${PN[np.p]} ${fmt12(np.hm)}</strong><span class="left">${fmtLeft(np.at - Date.now())}</span></div>${A && al.enabled && status.nextAlarm ? `<span class="alarmline">منبه الفجر: ${fmtWhen(status.nextAlarm)}</span>` : ""}</section>` : "";
 
   const diff = Math.round((today - sel)/864e5);
   const dlabel = diff === 0 ? "النهارده" : diff === 1 ? "امبارح" : sel.toLocaleDateString("ar-EG",{weekday:"long"});
@@ -567,7 +690,7 @@ function todayHTML(){
   const emptyGroups = S.groups.every(g => !g.items.length);
   const startCard = emptyGroups ? `<section class="card"><h2>مساحتك فاضية</h2><p class="hint">ضيف عاداتك وأهدافك، أو جاوب على ٥ أسئلة وأنا أبنيهالك.</p><button class="btn wide" data-act="ob-start">ابنيهالي بالأسئلة</button><button class="btn ghost wide" data-act="edit">هبنيها بنفسي</button></section>` : "";
 
-  return `<header class="top"><div><h1>${greet}</h1><p class="sub">${total ? ar(done)+" من "+ar(total)+" "+(diff === 0 ? "النهارده" : "في اليوم ده") : "يومك"}</p></div><div class="acts"><button class="iconbtn" data-act="reports" aria-label="التقارير">${ICON.chart}</button><button class="iconbtn" data-act="edit" aria-label="عدّل البنود">${ICON.edit}</button><button class="iconbtn" data-act="settings" aria-label="الإعدادات">${ICON.gear}</button></div></header>
+  return `<header class="top"><div><h1>${greet}</h1><p class="sub">${total ? ar(done)+" من "+ar(total)+" "+(diff === 0 ? "النهارده" : "في اليوم ده") : TAGLINE}</p></div><div class="acts"><button class="iconbtn" data-act="reports" aria-label="التقارير">${ICON.chart}</button><button class="iconbtn" data-act="edit" aria-label="عدّل البنود">${ICON.edit}</button><button class="iconbtn" data-act="settings" aria-label="الإعدادات">${ICON.gear}</button></div></header>
   ${banners}${pbar}
   ${emptyGroups ? "" : `<div class="datebar"><button data-act="prev" aria-label="اليوم اللي قبله">›</button><div class="datelabel"><strong>${dlabel}</strong><span>${dsub}</span></div><button data-act="next" aria-label="اليوم اللي بعده"${diff<=0?" disabled":""}>‹</button></div>`}
   ${startCard}${groups}${tasksHTML()}`;
@@ -643,9 +766,50 @@ function schedEditor(s, inherited){
   if(type === "daily" && inherited) extra = `<p class="hint">القسم: ${esc(schedText(inherited))}</p>`;
   return `<h3>الأيام</h3><div class="seg" role="group" aria-label="الأيام">${seg}</div>${extra}`;
 }
+function targetEditor(it){
+  const cnt = it.target > 1;
+  return `<h3>الهدف</h3><div class="seg" role="group" aria-label="الهدف"><button class="${!cnt ? "on" : ""}" data-act="target-type" data-v="once">مرة واحدة</button><button class="${cnt ? "on" : ""}" data-act="target-type" data-v="count">عدد (كوبايات، صفحات…)</button></div>
+    ${cnt ? `<div class="stepper"><button class="iconbtn sm" data-act="target-step" data-v="-1" aria-label="أقل">−</button><strong>${ar(it.target)}</strong><button class="iconbtn sm" data-act="target-step" data-v="1" aria-label="أكتر">+</button><input class="inp" style="max-width:9rem" data-input="item-unit" data-g="${esc(sheet.g)}" data-i="${esc(it.id)}" value="${esc(it.unit || "")}" placeholder="الوحدة" maxlength="12" aria-label="الوحدة"></div><p class="hint">كل دوسة على البند بتزوّد واحد، ولما توصل للهدف بيتعلّم عليه.</p>` : ""}`;
+}
+function fajrSheetHTML(){
+  const k = sheet.k, d = fromKey(k), st = fajrState(k), w = fajrWake(k);
+  return `<div class="scrim" data-act="sheet-close"></div><div class="sheet" role="dialog" aria-label="الفجر">
+    <div class="head"><h2>الفجر · ${dayWord(d.getTime())}</h2><button class="btn sm ghost" data-act="sheet-close">قفل</button></div>
+    ${w ? `<p class="hint">صحيت الساعة ${fmt12(w)} من المنبه.</p>` : ""}
+    <div class="opts">${Object.entries(FAJR_S).map(([v,[e,l]]) => `<button class="opt${st === v ? " on" : ""}" data-act="fajr-set" data-v="${v}" aria-pressed="${st === v}"><span class="e">${e}</span>${l}</button>`).join("")}</div>
+    ${st ? `<button class="btn link" data-act="fajr-clear">لا، لسه ماصليتش</button>` : ""}
+  </div>`;
+}
+function histSheetHTML(){
+  const g = findG(sheet.g); const i = g && g.items.find(x => x.id === sheet.i); if(!i) return "";
+  const s = schedOf(g, i), weekly = !!(s && s.type === "weekly");
+  const chk = d => !!(((S.days[keyOf(d)] || {}).checks || {})[i.id]);
+  const end = new Date(today), start = weekStartOf(end); start.setDate(start.getDate() - 7*11);
+  const cells = []; const x = new Date(start);
+  while(cells.length < 84){ const fut = x > end; const done = !fut && chk(x); const off = !fut && !weekly && !scheduledOn(s, x); cells.push(`<i class="${fut ? "f" : done ? "d" : off ? "o" : ""}" title="${shortDate(x)}"></i>`); x.setDate(x.getDate()+1) }
+  const born = i.createdAt ? dayOf(i.createdAt) : firstDay(); const from = born < firstDay() ? firstDay() : born;
+  const all = daysBetween(from, end);
+  let best = 0, cur = 0, total = 0;
+  if(!weekly){ const sd = all.filter(d => scheduledOn(s, d)); sd.forEach((d, idx) => { if(chk(d)){ cur++; total++; best = Math.max(best, cur) } else if(!(idx === sd.length - 1 && keyOf(d) === keyOf(today))) cur = 0 }) }
+  else total = all.filter(chk).length;
+  let weeksMet = 0, weeks = 0;
+  if(weekly){ const seen = {}; all.forEach(d => { const k = keyOf(weekStartOf(d)); if(seen[k] !== undefined) return; seen[k] = 1; const ws = weekStartOf(d); const we = new Date(ws); we.setDate(we.getDate()+6); if(we > end) return; weeks++; if(weekCount(i.id, ws) >= s.times) weeksMet++ }) }
+  const mStart = new Date(today.getFullYear(), today.getMonth(), 1, 12); const m = computeReport(mStart, today).items.find(r => r.i.id === i.id);
+  return `<div class="scrim" data-act="sheet-close"></div><div class="sheet" role="dialog" aria-label="${esc(i.label)}" style="${cvar(i.color || g.color)}">
+    <div class="head"><h2>${i.icon ? esc(i.icon)+" " : ""}${esc(i.label)}</h2><button class="btn sm ghost" data-act="sheet-close">قفل</button></div>
+    <p class="hint">${esc(schedText(s))}${i.target > 1 ? " · الهدف "+ar(i.target)+" "+esc(i.unit || "") : ""}</p>
+    <div class="heat" role="img" aria-label="آخر ١٢ أسبوع">${cells.join("")}</div>
+    <div class="legend"><span><i class="d"></i>اتعمل</span><span><i></i>ماتعملش</span>${weekly ? "" : `<span><i class="o"></i>مش مطلوب</span>`}</div>
+    <div class="insights">
+      ${weekly ? `<div><small>أسابيع حققت فيها الهدف</small><b>${ar(weeksMet)} من ${ar(weeks)}</b></div>` : `<div><small>السلسلة دلوقتي</small><b>${ar(cur)}</b></div><div><small>أطول سلسلة</small><b>${ar(best)}</b></div>`}
+      <div><small>الشهر ده</small><b>${m ? pctTxt(m.pct) : "—"}</b></div><div><small>مرات كلها</small><b>${ar(total)}</b></div>
+    </div></div>`;
+}
 function sheetHTML(){
   if(!sheet) return "";
   if(sheet.type === "task") return taskSheetHTML();
+  if(sheet.type === "fajr") return fajrSheetHTML();
+  if(sheet.type === "hist") return histSheetHTML();
   const g = findG(sheet.g); if(!g) return "";
   const isItem = !!sheet.i;
   const it = isItem ? g.items.find(x => x.id === sheet.i) : null; if(isItem && !it) return "";
@@ -659,6 +823,7 @@ function sheetHTML(){
   return `<div class="scrim" data-act="sheet-close"></div><div class="sheet" role="dialog" aria-label="${esc(target.title || target.label)}">
     <div class="head"><h2>${esc(target.title || target.label || "")}</h2><button class="btn sm" data-act="sheet-close">تم</button></div>
     ${showSched ? schedEditor(target.sched, isItem ? g.sched : null) : ""}
+    ${isItem && showSched ? targetEditor(it) : ""}
     <h3>اللون</h3><div class="swatches">${swatches}</div>
     <h3>الأيقونة</h3><div class="emojis"><button class="${!icon ? "on" : ""}" data-act="pick-icon" data-v="" aria-label="بدون أيقونة" style="font-size:.75rem">بدون</button>${EMOJIS.map(e => `<button class="${icon === e ? "on" : ""}" data-act="pick-icon" data-v="${e}">${e}</button>`).join("")}</div>
     <h3>الترتيب</h3><div class="add"><button class="btn ghost" style="flex:1" data-act="move" data-d="-1"${idx <= 0 ? " disabled" : ""}>↑ لفوق</button><button class="btn ghost" style="flex:1" data-act="move" data-d="1"${idx >= list.length-1 ? " disabled" : ""}>↓ لتحت</button></div>
@@ -765,19 +930,32 @@ function reportsHTML(){
   }
   const chart = `<div class="chart" role="img" aria-label="نسبة الإنجاز لكل ${label}"><div class="bars">${bars.map(x => `<div class="b${!x.pct ? " zero" : ""}" title="${shortDate(x.d)}: ${pctTxt(x.pct)}"><span style="height:${x.pct ? Math.max(3, Math.round(x.pct*100)) : 2}%"></span></div>`).join("")}</div><div class="axis"><span>${shortDate(bars[0].d)}</span><span>${shortDate(bars[bars.length-1].d)}</span></div></div>`;
 
+  let fajrCard = "";
+  if(fajrTracked()){
+    const fd = R.days; const prayed = fd.filter(d => fajrState(keyOf(d))); const ontime = prayed.filter(d => fajrState(keyOf(d)) !== "late");
+    const mosque = prayed.filter(d => fajrState(keyOf(d)) === "mosque").length;
+    const wakes = fd.map(d => fajrWake(keyOf(d))).filter(Boolean).map(hm => { const [h,m] = hm.split(":").map(Number); return h*60+m });
+    const avg = wakes.length ? Math.round(wakes.reduce((a,b) => a+b, 0)/wakes.length) : null;
+    let best = 0, cur = 0; fd.forEach(d => { if(fajrState(keyOf(d))){ cur++; best = Math.max(best, cur) } else cur = 0 });
+    fajrCard = `<section class="card fcard"><h2>🌅 الفجر</h2><div class="kpi"><strong>${fd.length ? pctTxt(prayed.length/fd.length) : "—"}</strong><span class="hint">صليته ${ar(prayed.length)} من ${ar(fd.length)} يوم</span></div>
+      <div class="insights"><div><small>في وقته</small><b>${ar(ontime.length)}</b></div><div><small>في المسجد</small><b>${ar(mosque)}</b></div><div><small>أطول سلسلة</small><b>${ar(best)}</b></div>${avg !== null ? `<div><small>متوسط صحيانك</small><b>${fmt12(pad(Math.floor(avg/60))+":"+pad(avg%60))}</b></div>` : ""}</div></section>`;
+  }
   const groupsHTML = R.groups.map(G => `<div class="ritem" style="${cvar(G.g.color)}"><span class="nm">${G.g.icon ? esc(G.g.icon) : ""} <strong>${esc(G.g.title)}</strong></span><span class="pc">${pctTxt(G.pct)}</span><div class="meter"><span style="width:${Math.round(G.pct*100)}%"></span></div></div>`).join("");
-  const itemsHTML = sorted.map(x => `<div class="ritem" style="${cvar(x.i.color || x.g.color)}"><span class="nm">${x.i.icon ? esc(x.i.icon) : ""} ${esc(x.i.label)}</span><span class="pc">${pctTxt(x.pct)}</span><div class="meter"><span style="width:${Math.round(x.pct*100)}%"></span></div><small>${ar(x.done)} من ${ar(x.req)}${x.weekly ? " (هدف أسبوعي)" : ""}${!x.weekly && x.streak >= 2 ? " · سلسلة "+ar(x.streak) : ""}</small></div>`).join("");
+  const itemsHTML = sorted.map(x => `<button class="ritem click" data-act="hist" data-g="${esc(x.g.id)}" data-i="${esc(x.i.id)}" style="${cvar(x.i.color || x.g.color)}"><span class="nm">${x.i.icon ? esc(x.i.icon) : ""} ${esc(x.i.label)}</span><span class="pc">${pctTxt(x.pct)}</span><div class="meter"><span style="width:${Math.round(x.pct*100)}%"></span></div><small>${ar(x.done)} من ${ar(x.req)}${x.weekly ? " (هدف أسبوعي)" : ""}${!x.weekly && x.streak >= 2 ? " · سلسلة "+ar(x.streak) : ""}</small></button>`).join("");
 
   return head + `<section class="card"><h3>${shortDate(R.start)} – ${shortDate(R.end)}</h3><div class="kpi"><strong>${pctTxt(R.pct)}</strong><span class="hint">${ar(R.done)} من ${ar(R.req)} اتعمل</span>${delta !== null ? `<span class="delta ${delta >= 0 ? "up" : "down"}">${delta >= 0 ? "↑" : "↓"} ${ar(Math.abs(delta))} نقطة عن الفترة اللي قبلها</span>` : ""}</div>${chart}</section>
+  ${fajrCard}
   ${ins.length ? `<section class="card"><h2>الخلاصة</h2><div class="insights">${ins.map(([k,v]) => `<div><small>${k}</small><b>${v}</b></div>`).join("")}</div></section>` : ""}
   <section class="card"><h2>الأقسام</h2><div class="rlist">${groupsHTML}</div></section>
-  <section class="card"><h2>كل البنود</h2><p class="hint">من الأضعف للأقوى. الأيام اللي مش مطلوبة والإجازات مش محسوبة عليك.</p><div class="rlist">${itemsHTML}</div></section>
+  <section class="card"><h2>كل البنود</h2><p class="hint">من الأضعف للأقوى. دوس على أي بند عشان تشوف تاريخه. الأيام اللي مش مطلوبة والإجازات مش محسوبة عليك.</p><div class="rlist">${itemsHTML}</div></section>
   <section class="card"><h2>التاسكات</h2><div class="insights"><div><small>خلصت</small><b>${ar(R.tasksDone)}</b></div><div><small>اتضافت</small><b>${ar(R.tasksAdded)}</b></div><div><small>متأخرة دلوقتي</small><b>${ar(R.overdue)}</b></div></div></section>
   <button class="btn ghost wide" data-act="rp-copy">انسخ التقرير كنص</button>`;
 }
 function reportText(){
   const [a, b] = periodRange(rp.period); const R = computeReport(a, b);
-  const lines = ["تقرير يومي: "+shortDate(R.start)+" – "+shortDate(R.end), "الإنجاز: "+pctTxt(R.pct)+" ("+ar(R.done)+" من "+ar(R.req)+")", ""];
+  const lines = ["تقرير يومي: "+shortDate(R.start)+" – "+shortDate(R.end)];
+  if(fajrTracked()){ const pr = R.days.filter(d => fajrState(keyOf(d))).length; lines.push("🌅 الفجر: "+ar(pr)+" من "+ar(R.days.length)+" يوم") }
+  lines.push("الإنجاز: "+pctTxt(R.pct)+" ("+ar(R.done)+" من "+ar(R.req)+")", "");
   R.groups.forEach(G => lines.push((G.g.icon || "•")+" "+G.g.title+": "+pctTxt(G.pct)));
   const sorted = R.items.slice().sort((x,y) => x.pct - y.pct);
   if(sorted.length){ lines.push("", "محتاج اهتمام: "+sorted[0].i.label+" ("+pctTxt(sorted[0].pct)+")") }
@@ -798,6 +976,12 @@ function settingsHTML(){
   const nag = s.nag;
   return `<header class="top"><button class="iconbtn" data-act="back" aria-label="رجوع">${ICON.back}</button><h1>الإعدادات</h1><span style="width:42px"></span></header>
   <section class="card"><h2>اسمك</h2><input class="inp" data-input="name" value="${esc(s.name)}" placeholder="اكتب اسمك" maxlength="30" autocomplete="off" aria-label="اسمك"></section>
+
+  <section class="card fcard" id="sec-fajr"><h2>🌅 الفجر</h2>
+    <div class="field"><label>محتاج تنام كام ساعة؟</label><div class="stepper"><button class="iconbtn sm" data-act="sleep-step" data-v="-1" aria-label="أقل">−</button><strong>${ar(s.fajr.sleepHours)} ساعات</strong><button class="iconbtn sm" data-act="sleep-step" data-v="1" aria-label="أكتر">+</button></div></div>
+    ${fajrTracked() ? `<p class="hint">عشان تصحى للفجر الجاي مرتاح: نام قبل ${fmt12(hmOf(bedtimeFor(nextFajr())))}.</p>` : `<p class="hint">ضيف قسم الصلوات عشان يظهر كارت الفجر.</p>`}
+    ${A ? `<div class="row"><span>فكّرني أنام (قبلها بنص ساعة)</span>${sw("bedtime", s.fajr.bedtime, "تذكير النوم")}</div>` : ""}
+    <div class="row"><span>${challengeInfo() ? "تحدّي ٤٠ يوم فجر شغال" : "تحدّي ٤٠ يوم فجر"}</span>${challengeInfo() ? `<button class="btn sm danger" data-act="chal-stop">${confirmDel === "__chal" ? "متأكد؟" : "وقّفه"}</button>` : `<button class="btn sm" data-act="chal-start">ابدأه</button>`}</div></section>
 
   <section class="card"><h2>المظهر</h2><div class="seg" role="group" aria-label="الوضع">${modes}</div><h3>اللون الأساسي</h3><div class="swatches">${accents}</div></section>
 
@@ -838,6 +1022,7 @@ function settingsHTML(){
   ${GC ? `<section class="card"><div class="head"><h2>إحصائيات مجهولة</h2>${sw("analytics", s.analytics, "إحصائيات مجهولة")}</div><p class="hint">لما تكون شغالة، التطبيق بيبعت مرة في اليوم إنه «اتفتح على ${platform() === "laptop" ? "لابتوب" : platform() === "iphone" ? "آيفون" : "أندرويد"}». من غير اسمك ولا بنودك ولا أي حاجة عنك.</p></section>` : ""}
 
   <section class="card"><h2>بياناتك</h2><p class="hint">بياناتك محفوظة على الجهاز ده بس، ومحدش غيرك يقدر يشوفها. عشان تنقلها لجهاز تاني: انسخ نسخة احتياطية هنا والصقها هناك.</p>
+    ${A ? `<p class="hint">التطبيق بيعمل نسخة احتياطية تلقائي على Google Drive بتاع موبايلك، لو «النسخ الاحتياطي» شغال في إعدادات الموبايل.</p><button class="btn ghost wide" data-act="share-backup">ابعت نسخة احتياطية (واتساب، Drive…)</button>` : ""}
     <button class="btn ghost wide" data-act="backup">انسخ نسخة احتياطية</button>
     <textarea id="importbox" rows="3" placeholder="الصق نسخة احتياطية هنا" aria-label="نسخة احتياطية"></textarea>
     <button class="btn wide" data-act="import">استورد</button>
@@ -950,7 +1135,10 @@ function onClick(e){
   switch(act){
     /* onboarding */
     case "ob-start": flush(); sheet = null; ob = newOb(S.onboarded ? "rebuild" : "first"); render(); window.scrollTo(0,0); break;
-    case "ob-next": { const n = $("#ob-name"); if(n) ob.name = n.value.trim().slice(0,30); ob.step = Math.min(5, ob.step + 1); render(); window.scrollTo(0,0); break }
+    case "ob-next": { const n = $("#ob-name"); if(n) ob.name = n.value.trim().slice(0,30); ob.step = Math.min(6, ob.step + 1); render(); window.scrollTo(0,0); break }
+    case "ob-fajr": ob.fajr = v; render(); break;
+    case "ob-fajr-alarm": ob.fajrAlarm = !ob.fajrAlarm; render(); break;
+    case "ob-sleep": ob.sleep = +v; render(); break;
     case "ob-back": ob.step = Math.max(0, ob.step - 1); render(); window.scrollTo(0,0); break;
     case "ob-cancel": ob = null; render(); break;
     case "ob-work": ob.work = v; render(); break;
@@ -964,20 +1152,47 @@ function onClick(e){
       const n = $("#ob-name"); if(n) ob.name = n.value.trim().slice(0,30);
       if(ob.name) S.settings.name = ob.name;
       const gs = act === "ob-empty" ? [] : obGroups(ob);
+      const fl = ob.fajr;
+      if(act !== "ob-empty"){ S.settings.fajr.sleepHours = ob.sleep; if(A && ob.fajrAlarm) S.settings.alarm.enabled = true }
       if(v === "replace") S.groups = gs;
       else { gs.forEach(g => { if(g.kind === "prayers" && hasPrayers()) return; if(findG(g.id)) g.id = uid("g"); S.groups.push(g) }) }
       const first = !S.onboarded;
       S.onboarded = true; ob = null; view = "today"; ptCache = {}; save(true); render(); window.scrollTo(0,0);
-      if(first){ ping("/start/"+(gs.length ? "smart" : "empty")); gs.forEach(g => ping("/group/"+(g.pack || g.icon || "custom"))) }
+      if(first){ ping("/start/"+(gs.length ? "smart" : "empty")); ping("/fajr/"+fl); gs.forEach(g => ping("/group/"+(g.pack || g.icon || "custom"))) }
       if(A && !status.notifications && gs.length) A.requestNotifications();
       break;
     }
     /* today */
     case "toggle": {
       const k = keyOf(sel); const d = S.days[k] || (S.days[k] = {date:k, checks:{}}); d.checks = d.checks || {};
-      if(d.checks[id]) delete d.checks[id]; else d.checks[id] = true;
+      const it = itemById(id);
+      if(it && it.target > 1){
+        d.counts = d.counts || {};
+        let n = d.counts[id] || (d.checks[id] ? it.target : 0);
+        if(d.checks[id]){ n = 0; delete d.checks[id] } else { n++; if(n >= it.target){ n = it.target; d.checks[id] = true } }
+        if(n) d.counts[id] = n; else delete d.counts[id];
+        if(n === it.target) toast("خلصت هدف «"+it.label+"»");
+      } else { if(d.checks[id]) delete d.checks[id]; else d.checks[id] = true }
       save(true); render(); break;
     }
+    case "fajr-open": flush(); sheet = {type:"fajr", k:b.dataset.k}; render(); break;
+    case "fajr-set": case "fajr-clear": {
+      const k = sheet.k; const d = S.days[k] || (S.days[k] = {date:k, checks:{}}); d.checks = d.checks || {};
+      if(act === "fajr-set"){ d.checks.fajr = true; d.fajr = Object.assign(d.fajr || {}, {s:v}) }
+      else { delete d.checks.fajr; if(d.fajr) delete d.fajr.s }
+      sheet = null; save(true); render();
+      if(act === "fajr-set"){ const n = fajrStreak(); toast(n >= 2 ? ar(n)+" أيام فجر ورا بعض 🌅" : "تقبّل الله 🌅") }
+      break;
+    }
+    case "fajr-alarm-on": if(A){ S.settings.alarm.enabled = true; save(true); go("settings", "sec-alarm"); toast(S.settings.alarm.code ? "المنبه اتظبط" : "سجّل كود المنبه عشان يشتغل صح") } break;
+    case "chal-start": S.settings.fajr.challenge = {start:keyOf(today)}; save(true); render(); toast("بدأ تحدّي ٤٠ يوم فجر. ربنا يعينك 🌅"); ping("/challenge/start"); break;
+    case "chal-stop": if(confirmDel !== "__chal"){ armConfirm("__chal"); break } confirmDel = null; S.settings.fajr.challenge = null; save(true); render(); break;
+    case "sleep-step": S.settings.fajr.sleepHours = Math.max(5, Math.min(9, S.settings.fajr.sleepHours + (+v))); save(true); render(); break;
+    case "bedtime": S.settings.fajr.bedtime = !S.settings.fajr.bedtime; save(true); render(); break;
+    case "hist": flush(); sheet = {type:"hist", g:b.dataset.g, i:b.dataset.i}; render(); break;
+    case "target-type": { const t = sheetTarget(); if(!t) break; if(v === "count"){ t.target = t.target > 1 ? t.target : 8; t.unit = t.unit || "" } else { delete t.target; delete t.unit } save(true); render(); break }
+    case "target-step": { const t = sheetTarget(); if(!t || !(t.target > 1)) break; t.target = Math.max(2, Math.min(99, t.target + (+v))); save(true); render(); break }
+    case "share-backup": { flush(); const bk = Object.assign({}, S); delete bk.meta; if(A && A.share) A.share(JSON.stringify(bk)); else copyText(JSON.stringify(bk), "اتنسخت"); break }
     case "prev": sel.setDate(sel.getDate()-1); render(); break;
     case "next": if(keyOf(sel) !== keyOf(today)){ sel.setDate(sel.getDate()+1); render() } break;
     case "settings": go("settings"); break;
@@ -1086,6 +1301,7 @@ function onClick(e){
 }
 app.addEventListener("click", onClick);
 sheetRoot.addEventListener("click", onClick);
+sheetRoot.addEventListener("input", onInput);
 
 function onInput(e){
   const el = e.target, k = el.dataset.input; if(!k) return;
@@ -1093,6 +1309,7 @@ function onInput(e){
   else if(k === "ob-name"){ if(ob) ob.name = el.value.trim().slice(0,30) }
   else if(k === "grp-title"){ const g = findG(el.dataset.g); if(g){ g.title = el.value; save() } }
   else if(k === "item-label"){ const it = findI(el.dataset.g, el.dataset.i); if(it){ it.label = el.value; save() } }
+  else if(k === "item-unit"){ const it = findI(el.dataset.g, el.dataset.i); if(it){ it.unit = el.value.slice(0,12); save() } }
 }
 app.addEventListener("input", onInput);
 

@@ -57,6 +57,33 @@ object Store {
         }
     }
 
+    /** Time the Fajr alarm was stopped, kept on that calendar day. */
+    fun setWake(ctx: Context, date: String, hm: String) {
+        synchronized(lock) {
+            val o = obj(ctx)
+            val day = o.child("days").child(date)
+            day.put("date", date)
+            day.child("fajr").put("wake", hm)
+            write(ctx, o.toString())
+        }
+    }
+
+    /** +1 on a count habit (from the widget); marks it done when the target is reached. */
+    fun increment(ctx: Context, date: String, item: String, target: Int) {
+        synchronized(lock) {
+            val o = obj(ctx)
+            val day = o.child("days").child(date)
+            day.put("date", date)
+            val checks = day.child("checks")
+            val counts = day.child("counts")
+            if (checks.optBoolean(item, false)) return
+            val n = (counts.optInt(item, 0) + 1).coerceAtMost(target)
+            counts.put(item, n)
+            if (n >= target) checks.put(item, true)
+            write(ctx, o.toString())
+        }
+    }
+
     fun markTask(ctx: Context, id: String) {
         synchronized(lock) {
             val o = obj(ctx)

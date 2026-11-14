@@ -6,9 +6,9 @@ root = pathlib.Path(__file__).resolve().parent.parent
 src = root / "android/app/src/main/assets"
 html = (src / "index.html").read_text(encoding="utf-8")
 head = """<title>يومي</title>
-<meta name="description" content="يومي: متابعة الصلوات والأذكار والعادات والتاسكات">
-<meta name="theme-color" content="#f2f5f3" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101513" media="(prefers-color-scheme: dark)">
+<meta name="description" content="يومي: يومك بيبدأ من الفجر. منبه فجر، وعاداتك ومهامك بمواعيدك انت.">
+<meta name="theme-color" content="#f3f5f9" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0e1324" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
