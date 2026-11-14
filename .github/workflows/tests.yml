@@ -10,7 +10,8 @@ on:
 
 jobs:
   web:
-    runs-on: ubuntu-latest
+    # pinned: Playwright's browser builds lag behind new Ubuntu releases
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
