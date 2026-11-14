@@ -19,7 +19,7 @@ import kotlin.math.abs
  * so the next occurrences are always queued.
  *
  * Request code ranges:
- *   999 tick · 1000 Fajr alarm · 1001 test alarm · 2000+ adhan · 3000+ items · 4000 nightly
+ *   999 tick · 1000 Fajr alarm · 1001 test alarm · 2000+ adhan · 3000+ items · 4000 nightly · 4100 bedtime
  *   5000+ task reminders · 6000 Fajr follow-up · 8000+ task rings · 9000+ snoozed rings · 30000+ repeat reminders
  */
 object Scheduler {

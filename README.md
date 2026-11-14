@@ -17,7 +17,7 @@
 - **تاسكات ومشاوير** بتفضل موجودة لحد ما تخلصها، ومعاها تذكير اختياري.
 - **Widget** على الشاشة الرئيسية، وعادات بالعدد (٨ كوبايات مية)، وتاريخ وسلسلة لكل عادة، وتقارير للأسبوع والشهر.
 - **منبه الفجر:** بيرن بأعلى صوت ومفيهوش snooze، ومش بيسكت غير لما تمسح QR أو باركود متعلّق بعيد عن سريرك. وفيه بديل طوارئ بمسائل حساب عشان ماتتقفلش برة.
-- **خصوصية:** كل بياناتك على جهازك بس. مفيش حساب ولا تسجيل دخول. التطبيق بيبعت مرة في اليوم إشارة مجهولة فيها نوع الجهاز بس (أندرويد، آيفون، لابتوب) عشان نعرف عدد المستخدمين، وتقدر تقفلها من الإعدادات.
+- **خصوصية:** كل بياناتك على جهازك بس. مفيش حساب ولا تسجيل دخول. التطبيق بيبعت مرة في اليوم إشارة مجهولة فيها نوع الجهاز بس (أندرويد، آيفون، لابتوب) عشان نعرف عدد المستخدمين، ولو حصل عطل بيبعت نوعه ومكانه في الكود بس. وتقدر تقفلها من الإعدادات.
 
 ## التثبيت
 
@@ -50,7 +50,7 @@ A Fajr alarm that only stops when you get up and scan a code, and a bedtime work
 - **Tasks and errands** that stay until done, with an optional reminder.
 - **A home screen widget**, count habits (8 glasses of water), history and streaks for every habit, and weekly and monthly reports.
 - **Fajr alarm:** full volume, no snooze, stops only when you scan a QR or barcode placed away from your bed. A math-problem fallback means you can never get locked out.
-- **Private:** your data stays on your device. No account, no login. Once a day the app sends an anonymous ping with only the device type (Android, iPhone, laptop) so we can count users. You can turn it off in Settings.
+- **Private:** your data stays on your device. No account, no login. Once a day the app sends an anonymous ping with only the device type (Android, iPhone, laptop) so we can count users, and if something breaks, only the error type and its place in the code. You can turn it off in Settings.
 
 ## Install
 

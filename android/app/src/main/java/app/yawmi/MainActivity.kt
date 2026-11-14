@@ -39,6 +39,7 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
     private lateinit var web: WebView
     private lateinit var root: FrameLayout
+    private var changeListener: ((String) -> Unit)? = null
 
     private val scanLauncher = registerForActivityResult(ScanContract()) { r ->
         val c = r.contents
@@ -95,6 +96,10 @@ class MainActivity : AppCompatActivity() {
             }
         }
         web.addJavascriptInterface(Bridge(), "Android")
+        // changes made by the widget, notification buttons or the alarm while the app is open
+        val onChange: (String) -> Unit = { ev -> js("window.onNativeChange&&window.onNativeChange($ev)") }
+        changeListener = onChange
+        Store.listener = onChange
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
@@ -110,6 +115,11 @@ class MainActivity : AppCompatActivity() {
 
         web.loadUrl("https://$HOST/assets/index.html")
         Thread { Scheduler.rescheduleAll(this) }.start()
+    }
+
+    override fun onDestroy() {
+        if (Store.listener === changeListener) Store.listener = null
+        super.onDestroy()
     }
 
     override fun onResume() {
@@ -188,11 +198,28 @@ class MainActivity : AppCompatActivity() {
         @JavascriptInterface
         fun load(): String = Store.read(ctx)
 
+        /** Returns false if the document was rejected; the app then keeps its copy and tells the user. */
         @JavascriptInterface
-        fun save(json: String) {
-            Store.write(ctx, json)
+        fun save(json: String): Boolean {
+            if (!Store.write(ctx, json)) return false
             Scheduler.rescheduleAll(ctx)
+            return true
         }
+
+        /** Dates of the daily snapshots, newest first, as a JSON array. */
+        @JavascriptInterface
+        fun snapshots(): String = org.json.JSONArray(Store.snapshots(ctx)).toString()
+
+        @JavascriptInterface
+        fun restore(date: String): Boolean {
+            val ok = Store.restore(ctx, date)
+            if (ok) Scheduler.rescheduleAll(ctx)
+            return ok
+        }
+
+        /** The last crash ("Type at File.kt:line"), once; "" if none. */
+        @JavascriptInterface
+        fun lastCrash(): String = Crash.take(ctx)
 
         @JavascriptInterface
         fun prayerTimes(date: String): String {

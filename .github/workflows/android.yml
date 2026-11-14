@@ -16,7 +16,11 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  tests:
+    uses: ./.github/workflows/tests.yml
+
   build:
+    needs: tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -52,13 +56,23 @@ jobs:
             git push -q origin HEAD:main
           fi
 
-      - name: Build APK
+      - name: Check the version was bumped
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          code=$(grep -oP 'versionCode\s*=\s*\K\d+' android/app/build.gradle.kts)
+          if gh release view "v$code" -R "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "Release v$code already exists. Raise versionCode in android/app/build.gradle.kts, otherwise phones never see the update." | tee android/build.log
+            exit 1
+          fi
+
+      - name: Test and build APK
         working-directory: android
         env:
           SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
         run: |
           set +e
-          gradle assembleRelease bundleRelease --no-daemon --stacktrace --warning-mode=summary > build.log 2>&1
+          gradle testDebugUnitTest assembleRelease bundleRelease --no-daemon --stacktrace --warning-mode=summary > build.log 2>&1
           code=$?
           tail -n 60 build.log
           exit $code
@@ -83,12 +97,23 @@ jobs:
             yawmi.aab
           make_latest: "true"
 
+      - name: Announce the version
+        # the app checks this file on GitHub Pages (a CDN) instead of the rate-limited GitHub API
+        run: |
+          name=$(grep -oP 'versionName\s*=\s*"\K[^"]+' android/app/build.gradle.kts)
+          printf '{"versionCode": %s, "versionName": "%s"}\n' "${{ steps.v.outputs.code }}" "$name" > version.json
+          git config user.name "build-bot"
+          git config user.email "build-bot@users.noreply.github.com"
+          git add version.json
+          git commit -qm "Version ${{ steps.v.outputs.code }} [skip ci]" || exit 0
+          git pull -q --rebase origin main && git push -q origin HEAD:main
+
       - name: Save build log
         if: always()
         run: |
           mkdir -p /tmp/out
           { echo "status: ${{ job.status }}"; echo "commit: ${{ github.sha }}"; echo; \
-            grep -E "^e: |error:|FAILURE|What went wrong|BUILD (SUCCESSFUL|FAILED)" android/build.log | head -n 120; \
+            grep -E "^e: |error:|FAILURE|What went wrong|BUILD (SUCCESSFUL|FAILED)| FAILED$|AssertionError|expected:<|Release v[0-9]+ already" android/build.log | head -n 120; \
             echo; echo "----- tail -----"; tail -n 200 android/build.log; } > /tmp/out/build.log 2>/dev/null || echo "no log" > /tmp/out/build.log
           git config user.name "build-bot"
           git config user.email "build-bot@users.noreply.github.com"

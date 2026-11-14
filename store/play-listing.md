@@ -96,6 +96,7 @@ Most of us miss Fajr because we sleep late, not because we lack willpower. Yawmi
 - **Do you provide a way for users to request that their data is deleted?** Yes (الإحصائيات مجهولة، ومفيش بيانات شخصية متخزنة على سيرفر. وتقدر تقفلها من الإعدادات)
 - **Data types collected:**
   - **App activity → App interactions:** Collected · Not shared · Optional (users can turn it off) · Purpose: **Analytics**
+  - **App info and performance → Crash logs, Diagnostics:** Collected · Not shared · Optional · Purpose: **Analytics** (نوع العطل ومكانه في الكود ورقم النسخة بس)
   - **Device or other IDs:** Not collected
   - **Location:** Not collected (الموقع بيتحسب عليه المواقيت على الجهاز ومش بيطلع منه)
   - **Photos/videos:** Not collected (الكاميرا للمسح بس)

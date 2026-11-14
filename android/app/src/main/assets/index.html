@@ -252,7 +252,8 @@ const PN = {fajr:"الفجر",dhuhr:"الظهر",asr:"العصر",maghrib:"ال�
 const DOW = ["الأحد","الاتنين","التلات","الأربع","الخميس","الجمعة","السبت"];
 const DOW_S = ["ح","ن","ث","ر","خ","ج","س"];
 const APK = "https://github.com/mahran20/yawmi/releases/latest/download/yawmi.apk";
-const PRIVACY = "https://mahran20.github.io/yawmi/privacy.html";
+const SITE = "https://mahran20.github.io/yawmi/";
+const PRIVACY = SITE+"privacy.html";
 const CITIES = [["القاهرة",30.0444,31.2357],["الجيزة",30.0131,31.2089],["الإسكندرية",31.2001,29.9187],["المنصورة",31.0409,31.3785],["طنطا",30.7865,31.0004],["أسيوط",27.1810,31.1837],["الأقصر",25.6872,32.6396],["أسوان",24.0889,32.8998]];
 const COLORS = ["night","green","teal","blue","purple","rose","amber","orange","gray"];
 const COLOR_NAMES = {night:"ليلي",green:"أخضر",teal:"فيروزي",blue:"أزرق",purple:"بنفسجي",rose:"وردي",amber:"عسلي",orange:"برتقالي",gray:"رمادي"};
@@ -343,7 +344,8 @@ function normalize(o){
   return o;
 }
 
-let S, view = "today", ptCache = {}, status = {}, upd = null, confirmDel = null, confirmT = null, showDue = false, saveT = null, toastT = null, sheet = null, installEvt = null;
+let restorePick = null;
+let S, view = "today", ptCache = {}, status = {}, upd = null, saveFailed = false, recovered = null, confirmDel = null, confirmT = null, showDue = false, saveT = null, toastT = null, sheet = null, installEvt = null;
 let ob = null;           // onboarding answers while the questionnaire is open
 let rp = {period:"week", from:"", to:""}; // reports period
 function logicalToday(){ const d = new Date(); if(d.getHours() < CUT) d.setDate(d.getDate()-1); d.setHours(12,0,0,0); return d }
@@ -354,6 +356,11 @@ function load(){
   try{ raw = A ? A.load() : localStorage.getItem("yawmi") }catch(e){}
   let o = null;
   try{ o = raw ? JSON.parse(raw) : null }catch(e){}
+  if(A && !o && A.snapshots){
+    // first run, or the file and its backup are both damaged: in the second case a daily snapshot exists
+    let snaps = []; try{ snaps = JSON.parse(A.snapshots()) }catch(e){}
+    if(snaps.length && A.restore(snaps[0])){ try{ o = JSON.parse(A.load()) }catch(e){} if(o) recovered = snaps[0] }
+  }
   if(!A && !o){
     try{
       const old = JSON.parse(localStorage.getItem("dc2") || "null");
@@ -362,7 +369,12 @@ function load(){
   }
   S = normalize(o);
 }
-function writeNow(){ const s = JSON.stringify(S); try{ if(A) A.save(s); else localStorage.setItem("yawmi", s) }catch(e){} }
+function writeNow(){
+  const s = JSON.stringify(S); let ok = true;
+  try{ if(A) ok = A.save(s) !== false; else localStorage.setItem("yawmi", s) }catch(e){ ok = false }
+  if(!ok && !saveFailed){ saveFailed = true; toast("مقدرتش أحفظ آخر تعديل. لو المساحة على الموبايل خلصانة فضّي شوية وجرب تاني") }
+  if(ok) saveFailed = false;
+}
 function save(now){ clearTimeout(saveT); saveT = null; if(now) writeNow(); else saveT = setTimeout(() => { saveT = null; writeNow() }, 500) }
 function flush(){ if(saveT){ clearTimeout(saveT); saveT = null; writeNow() } }
 
@@ -966,6 +978,15 @@ function reportText(){
 /* ---------- settings ---------- */
 function sw(act, on, label){ return `<button class="switch${on?" on":""}" role="switch" aria-checked="${!!on}" aria-label="${label}" data-act="${act}"><span></span></button>` }
 function permRow(label, ok, act){ return `<div class="row"><span>${label}</span>${ok ? `<span class="ok">شغال</span>` : `<button class="btn sm" data-act="${act}">فعّله</button>`}</div>` }
+function fmtSnap(k){ return fromKey(k).toLocaleDateString("ar-EG", {weekday:"long", day:"numeric", month:"long"}) }
+function snapsHTML(){
+  if(!A || !A.snapshots) return "";
+  let list = []; try{ list = JSON.parse(A.snapshots()) }catch(e){}
+  if(!list.length) return "";
+  return `<h3>رجّع نسخة من يوم فات</h3><p class="hint">التطبيق بيحفظ نسخة كل يوم لآخر ٧ أيام. لو حاجة اتمسحت بالغلط، رجّع النسخة اللي قبلها.</p>
+    <div class="row"><select id="snap" class="inp" aria-label="اختار اليوم">${list.map(k => `<option value="${esc(k)}">${esc(fmtSnap(k))}</option>`).join("")}</select>
+    <button class="btn sm" data-act="restore">${confirmDel === "__restore" ? "متأكد؟" : "رجّعها"}</button></div>`;
+}
 function settingsHTML(){
   const s = S.settings, st = status, t = s.theme;
   const offsets = [0,5,10,15,20,30,45,60].map(m => `<option value="${m}"${+s.alarm.offset === m ? " selected" : ""}>${m ? ar(m)+" دقيقة" : "مع الأذان"}</option>`).join("");
@@ -1019,10 +1040,11 @@ function settingsHTML(){
     <p class="hint">لو موبايلك شاومي أو ريلمي أو أوبو: من إعدادات التطبيق فعّل «التشغيل التلقائي» (Autostart) كمان.</p></section>`
   : `<section class="card"><h2>المنبهات والتذكيرات</h2><p class="hint">متاحين في تطبيق الأندرويد بس. ${IS_IOS ? "الآيفون مابيسمحش لتطبيقات الويب ترن منبه أو تبعت تذكير في معاد." : "نسخة الويب مابتقدرش ترن منبه أو تبعت تذكير والصفحة مقفولة."}</p>${IS_ANDROID ? `<button class="btn wide" data-act="update">نزّل تطبيق الأندرويد</button>` : ""}</section>`}
 
-  ${GC ? `<section class="card"><div class="head"><h2>إحصائيات مجهولة</h2>${sw("analytics", s.analytics, "إحصائيات مجهولة")}</div><p class="hint">لما تكون شغالة، التطبيق بيبعت مرة في اليوم إنه «اتفتح على ${platform() === "laptop" ? "لابتوب" : platform() === "iphone" ? "آيفون" : "أندرويد"}». من غير اسمك ولا بنودك ولا أي حاجة عنك.</p></section>` : ""}
+  ${GC ? `<section class="card"><div class="head"><h2>إحصائيات مجهولة</h2>${sw("analytics", s.analytics, "إحصائيات مجهولة")}</div><p class="hint">لما تكون شغالة، التطبيق بيبعت مرة في اليوم إنه «اتفتح على ${platform() === "laptop" ? "لابتوب" : platform() === "iphone" ? "آيفون" : "أندرويد"}»، ولو حصل عطل بيبعت نوعه بس عشان نصلحه. من غير اسمك ولا بنودك ولا أي حاجة عنك.</p></section>` : ""}
 
   <section class="card"><h2>بياناتك</h2><p class="hint">بياناتك محفوظة على الجهاز ده بس، ومحدش غيرك يقدر يشوفها. عشان تنقلها لجهاز تاني: انسخ نسخة احتياطية هنا والصقها هناك.</p>
     ${A ? `<p class="hint">التطبيق بيعمل نسخة احتياطية تلقائي على Google Drive بتاع موبايلك، لو «النسخ الاحتياطي» شغال في إعدادات الموبايل.</p><button class="btn ghost wide" data-act="share-backup">ابعت نسخة احتياطية (واتساب، Drive…)</button>` : ""}
+    ${snapsHTML()}
     <button class="btn ghost wide" data-act="backup">انسخ نسخة احتياطية</button>
     <textarea id="importbox" rows="3" placeholder="الصق نسخة احتياطية هنا" aria-label="نسخة احتياطية"></textarea>
     <button class="btn wide" data-act="import">استورد</button>
@@ -1036,6 +1058,22 @@ function platform(){ return A ? "android-app" : IS_IOS ? "iphone" : IS_ANDROID ?
 function ping(path){
   if(!GC || !S.settings.analytics || navigator.onLine === false) return;
   try{ const img = new Image(); img.src = GC+"?p="+encodeURIComponent(path)+"&t=yawmi&rnd="+Math.random().toString(36).slice(2) }catch(e){}
+}
+/* Anonymous error counts: only the error type, the app version and the line, never a message or data. */
+function appVer(){ return A ? "v"+((status && status.versionCode) || "") : "web" }
+function reportError(kind, where){
+  const key = kind+"@"+where, today = keyOf(new Date());
+  let sent = {}; try{ sent = JSON.parse(localStorage.getItem("errSent") || "{}") }catch(e){}
+  if(sent[key] === today) return;
+  sent[key] = today; try{ localStorage.setItem("errSent", JSON.stringify(sent)) }catch(e){}
+  if(S) ping("/error/"+appVer()+"/"+kind+"@"+where);
+}
+window.addEventListener("error", e => { const er = e.error; reportError(((er && er.name) || "Error").replace(/\W/g, "").slice(0, 30), (e.lineno || 0)+":"+(e.colno || 0)) });
+window.addEventListener("unhandledrejection", e => { const r = e.reason; reportError(((r && r.name) || "Rejection").replace(/\W/g, "").slice(0, 30), "promise") });
+function reportCrash(){
+  if(!A || !A.lastCrash) return;
+  let c = ""; try{ c = A.lastCrash() }catch(e){}
+  if(c) ping("/crash/"+appVer()+"/"+c.replace(/[^\w.:@ -]/g, "").slice(0, 100));
 }
 function track(){
   if(!GC || !S.settings.analytics || navigator.onLine === false) return;
@@ -1056,7 +1094,7 @@ function track(){
 }
 
 /* ---------- render ---------- */
-const KEEP = ["newtask","new-date","new-time","new-ring","new-nag","importbox","ts-text","ts-date","ts-time","ts-ring","ts-nag","ob-name"];
+const KEEP = ["newtask","new-date","new-time","new-ring","new-nag","importbox","ts-text","ts-date","ts-time","ts-ring","ts-nag","ob-name","snap"];
 function render(){
   const keep = {};
   KEEP.forEach(id => { const el = document.getElementById(id); if(el) keep[id] = el.type === "checkbox" ? el.checked : el.value });
@@ -1115,10 +1153,12 @@ function checkUpdate(manual){
   let last = 0;
   try{ last = +localStorage.getItem("updChecked") || 0; upd = JSON.parse(localStorage.getItem("upd") || "null") }catch(e){}
   if(!manual && Date.now() - last < 6*3600e3) return;
-  fetch("https://api.github.com/repos/mahran20/yawmi/releases/latest", {cache:"no-store"})
-    .then(r => r.ok ? r.json() : Promise.reject(r.status))
-    .then(j => {
-      const v = parseInt(String(j.tag_name || "").replace(/\D/g, ""), 10) || 0;
+  // version.json is served by GitHub Pages (a CDN, no rate limit); the GitHub API allows only
+  // 60 calls an hour per IP, which many phones behind one mobile-carrier IP would exhaust.
+  const viaPages = () => fetch(SITE+"version.json", {cache:"no-store"}).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(j => +j.versionCode || Promise.reject("bad"));
+  const viaApi = () => fetch("https://api.github.com/repos/mahran20/yawmi/releases/latest", {cache:"no-store"}).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(j => parseInt(String(j.tag_name || "").replace(/\D/g, ""), 10) || 0);
+  viaPages().catch(viaApi)
+    .then(v => {
       upd = v > (status.versionCode || 0) ? {v} : null;
       try{ localStorage.setItem("updChecked", String(Date.now())); localStorage.setItem("upd", JSON.stringify(upd)) }catch(e){}
       if(manual) toast(upd ? "فيه نسخة جديدة" : "عندك آخر نسخة");
@@ -1290,6 +1330,13 @@ function onClick(e){
     case "perm-battery": if(A) A.requestBattery(); break;
     case "import": doImport(); break;
     case "backup": { flush(); const bk = Object.assign({}, S); delete bk.meta; copyText(JSON.stringify(bk), "اتنسخت. الصقها في الجهاز التاني"); break }
+    case "restore": {
+      const sel2 = document.getElementById("snap"); const k = sel2 && sel2.value; if(!k) break;
+      if(confirmDel !== "__restore"){ restorePick = k; armConfirm("__restore"); break }
+      confirmDel = null; flush();
+      if(A.restore(restorePick || k)){ load(); ptCache = {}; applyTheme(); render(); toast("رجعت لنسخة "+fmtSnap(restorePick || k)) } else toast("النسخة دي مش سليمة");
+      break;
+    }
     case "reset": {
       if(confirmDel !== "__reset"){ armConfirm("__reset"); break }
       confirmDel = null; const theme = S.settings.theme, meta = S.meta, an = S.settings.analytics;
@@ -1336,6 +1383,8 @@ app.addEventListener("submit", e => {
 });
 
 document.addEventListener("visibilitychange", () => { if(document.visibilityState === "hidden") flush() });
+// Escape closes a sheet on laptops, like the back button on phones
+document.addEventListener("keydown", e => { if(e.key === "Escape" && sheet){ sheet = null; render() } });
 
 /* ---------- native hooks ---------- */
 window.onNativeBack = goBack;
@@ -1345,6 +1394,18 @@ window.onNativeResume = () => {
   const t = logicalToday();
   if(keyOf(t) !== keyOf(today)){ if(keyOf(sel) === keyOf(today)) sel = new Date(t); today = t }
   render(); checkUpdate(false); track();
+};
+/* Changes made outside the page (widget, notification buttons, alarm) are already on disk;
+   apply them here too so the next save doesn't overwrite them. Each one only adds, so applying twice is harmless. */
+window.onNativeChange = ev => {
+  if(!ev || !S) return;
+  const day = k => S.days[k] || (S.days[k] = {date:k, checks:{}});
+  if(ev.kind === "check"){ const d = day(ev.date); (d.checks = d.checks || {})[ev.item] = true }
+  else if(ev.kind === "count"){ const d = day(ev.date); d.counts = d.counts || {}; d.counts[ev.item] = Math.max(d.counts[ev.item] || 0, ev.n); if(ev.done) (d.checks = d.checks || {})[ev.item] = true }
+  else if(ev.kind === "wake"){ const d = day(ev.date); d.fajr = Object.assign(d.fajr || {}, {wake:ev.hm}) }
+  else if(ev.kind === "task"){ const t = S.tasks[ev.id]; if(t && !t.done){ t.done = true; t.doneAt = ev.at } }
+  else return;
+  if(!ob && !sheet) render();
 };
 window.onNativeScan = code => {
   if(!code){ toast("ماتسجلش كود"); return }
@@ -1368,7 +1429,8 @@ setInterval(() => {
 
 window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if(view === "today" && !ob) render() });
 if(!A && "serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
-load(); applyTheme(); render(); checkUpdate(false); track();
+load(); applyTheme(); render(); checkUpdate(false); track(); reportCrash();
+if(recovered) toast("رجّعت بياناتك من نسخة "+fmtSnap(recovered));
 window.__yawmi = {calcTimes, normalize, defaults, computeReport, get S(){ return S }};
 })();
 </script>
