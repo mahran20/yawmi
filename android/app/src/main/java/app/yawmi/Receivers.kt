@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import java.time.LocalDate
 
 class ReminderReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -28,8 +29,11 @@ class ReminderReceiver : BroadcastReceiver() {
 
     private fun show(ctx: Context, intent: Intent, kind: String, item: String, date: String) {
         val code = intent.getIntExtra("code", 0)
-        var title = intent.getStringExtra("title") ?: ""
-        var text = intent.getStringExtra("text") ?: ""
+        val attempt = intent.getIntExtra("attempt", 0)
+        val baseTitle = intent.getStringExtra("title") ?: ""
+        val baseText = intent.getStringExtra("text") ?: ""
+        var title = baseTitle
+        var text = baseText
         var action: String? = null
         when (kind) {
             "tick" -> return
@@ -38,12 +42,23 @@ class ReminderReceiver : BroadcastReceiver() {
                 action = "صليت ✓"
             }
             "item" -> {
+                val data = Store.obj(ctx)
+                val found = Store.findItem(data, item) ?: return
                 if (Store.isChecked(ctx, date, item)) return
+                val day = try {
+                    LocalDate.parse(date)
+                } catch (e: Exception) {
+                    LocalDate.now()
+                }
+                val ws = Sched.weekStart(data.optJSONObject("settings") ?: org.json.JSONObject())
+                if (!Sched.dueOn(data, found.first, found.second, day, ws)) return
                 action = "اتعمل ✓"
+                if (attempt > 0) title = "لسه: $baseTitle"
             }
             "task" -> {
                 if (Store.isTaskDone(ctx, item)) return
                 action = "خلصت ✓"
+                if (attempt > 0) title = "لسه ماخلصتش؟"
             }
             "nightly" -> {
                 val r = Store.remaining(ctx, date)
@@ -59,17 +74,35 @@ class ReminderReceiver : BroadcastReceiver() {
             }
         }
         val channel = if (kind == "prayer") Notifs.CH_PRAYER else Notifs.CH_REMIND
-        Notifs.post(ctx, code, channel, title, text, action, kind, item, date)
+        Notifs.post(ctx, code % 10000, channel, title, text, action, kind, item, date)
+        if (kind == "item" || kind == "task") {
+            Scheduler.scheduleNag(ctx, kind, item, date, baseTitle, baseText, code, attempt)
+        }
     }
 }
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val ctx = context.applicationContext
+        if (intent.action == Scheduler.ACT_TASK_RING) {
+            val id = intent.getStringExtra("task") ?: ""
+            if (id.isEmpty() || Store.isTaskDone(ctx, id)) return
+            val text = intent.getStringExtra("text") ?: ""
+            try {
+                ContextCompat.startForegroundService(
+                    ctx,
+                    Intent(ctx, AlarmService::class.java).putExtra("mode", "task").putExtra("task", id).putExtra("text", text)
+                )
+            } catch (e: Exception) {
+                Notifs.post(ctx, 4500, Notifs.CH_PRAYER, "تذكير", text, "خلصت ✓", "task", id, "")
+            }
+            Scheduler.rescheduleAll(ctx)
+            return
+        }
         val test = intent.getBooleanExtra("test", false)
         try {
             ContextCompat.startForegroundService(
-                ctx, Intent(ctx, AlarmService::class.java).putExtra("test", test)
+                ctx, Intent(ctx, AlarmService::class.java).putExtra("mode", "fajr").putExtra("test", test)
             )
         } catch (e: Exception) {
             Notifs.alarmFallback(ctx, test)

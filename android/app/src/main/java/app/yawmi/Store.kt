@@ -3,6 +3,7 @@ package app.yawmi
 import android.content.Context
 import org.json.JSONObject
 import java.io.File
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 /** String value or null when missing, JSON null, or blank. */
@@ -81,17 +82,31 @@ object Store {
 
     fun remaining(ctx: Context, date: String): Left {
         val o = obj(ctx)
+        val day = try {
+            LocalDate.parse(date)
+        } catch (e: Exception) {
+            LocalDate.now()
+        }
         val checks = o.optJSONObject("days")?.optJSONObject(date)?.optJSONObject("checks")
         var total = 0
         var left = 0
         val groups = o.optJSONArray("groups")
         if (groups != null) {
             for (i in 0 until groups.length()) {
-                val items = groups.optJSONObject(i)?.optJSONArray("items") ?: continue
+                val g = groups.optJSONObject(i) ?: continue
+                val items = g.optJSONArray("items") ?: continue
                 for (j in 0 until items.length()) {
-                    val id = items.optJSONObject(j)?.str("id") ?: continue
+                    val item = items.optJSONObject(j) ?: continue
+                    val id = item.str("id") ?: continue
+                    val s = Sched.of(g, item)
+                    val checked = checks?.optBoolean(id, false) == true
+                    if (Sched.isWeekly(s)) {
+                        if (checked) total++
+                        continue
+                    }
+                    if (!Sched.scheduledOn(s, day)) continue
                     total++
-                    if (checks?.optBoolean(id, false) != true) left++
+                    if (!checked) left++
                 }
             }
         }
@@ -106,4 +121,20 @@ object Store {
         }
         return Left(left, total, openTasks)
     }
+
+    /** The section and item for an item id, or null if it was deleted. */
+    fun findItem(data: JSONObject, id: String): Pair<JSONObject, JSONObject>? {
+        val groups = data.optJSONArray("groups") ?: return null
+        for (i in 0 until groups.length()) {
+            val g = groups.optJSONObject(i) ?: continue
+            val items = g.optJSONArray("items") ?: continue
+            for (j in 0 until items.length()) {
+                val item = items.optJSONObject(j) ?: continue
+                if (item.optString("id") == id) return Pair(g, item)
+            }
+        }
+        return null
+    }
+
+    fun task(ctx: Context, id: String): JSONObject? = obj(ctx).optJSONObject("tasks")?.optJSONObject(id)
 }

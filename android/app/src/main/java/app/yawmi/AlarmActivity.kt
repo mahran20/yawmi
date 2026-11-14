@@ -20,6 +20,8 @@ import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.google.zxing.ResultPoint
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
@@ -65,15 +67,88 @@ class AlarmActivity : AppCompatActivity() {
             )
         }
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        val isTask = intent.getStringExtra("mode") == "task"
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                // the alarm cannot be dismissed with the back button
+                // the Fajr alarm cannot be dismissed with the back button; a task reminder just closes
+                if (isTask) {
+                    stopRing()
+                    finish()
+                }
             }
         })
+        if (isTask) {
+            buildTaskUi()
+            return
+        }
         test = intent.getBooleanExtra("test", false)
         val st = Store.settings(this)
         code = st.optJSONObject("alarm")?.str("code")
         buildUi(st.str("name"))
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        recreate()
+    }
+
+    private fun stopRing() {
+        stopService(Intent(this, AlarmService::class.java))
+    }
+
+    /** Keep content clear of the status and navigation bars (the app draws edge to edge). */
+    private fun fitInsets(v: View, l: Int, t: Int, r: Int, b: Int) {
+        ViewCompat.setOnApplyWindowInsetsListener(v) { view, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
+            view.setPadding(l + bars.left, t + bars.top, r + bars.right, b + bars.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
+    }
+
+    private fun buildTaskUi() {
+        val taskId = intent.getStringExtra("task") ?: ""
+        val taskText = intent.getStringExtra("text") ?: ""
+        val root = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER
+            setBackgroundColor(bg)
+            layoutDirection = View.LAYOUT_DIRECTION_RTL
+        }
+        root.addView(label(18f, mint).apply { text = "تذكير" })
+        root.addView(label(56f, white, true).apply {
+            text = LocalTime.now().format(DateTimeFormatter.ofPattern("h:mm"))
+        })
+        root.addView(label(24f, white, true).apply {
+            text = taskText
+            setPadding(0, dp(12), 0, dp(28))
+        }, LinearLayout.LayoutParams(M, W))
+        val done = pill("خلصتها ✓", mint, bg).apply {
+            setOnClickListener {
+                if (taskId.isNotEmpty()) Store.markTask(this@AlarmActivity, taskId)
+                stopRing()
+                Thread { Scheduler.rescheduleAll(this@AlarmActivity) }.start()
+                finish()
+            }
+        }
+        val snooze = pill("فكّرني بعد ١٠ دقايق", 0x22FFFFFF, white).apply {
+            setOnClickListener {
+                stopRing()
+                if (taskId.isNotEmpty()) Scheduler.snoozeTask(this@AlarmActivity, taskId, taskText, 10)
+                finish()
+            }
+        }
+        val close = pill("اقفل", 0x00000000, soft).apply {
+            setOnClickListener {
+                stopRing()
+                finish()
+            }
+        }
+        for (b in listOf(done, snooze, close)) {
+            root.addView(b, LinearLayout.LayoutParams(M, W).apply { topMargin = dp(10) })
+        }
+        setContentView(root)
+        fitInsets(root, dp(24), dp(40), dp(24), dp(24))
     }
 
     private fun label(size: Float, color: Int, bold: Boolean = false): TextView =
@@ -152,6 +227,7 @@ class AlarmActivity : AppCompatActivity() {
         }
         root.addView(switchBtn, LinearLayout.LayoutParams(M, W).apply { topMargin = dp(12) })
         setContentView(root)
+        fitInsets(root, dp(24), dp(40), dp(24), dp(24))
 
         val camOk = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
             PackageManager.PERMISSION_GRANTED
@@ -223,7 +299,7 @@ class AlarmActivity : AppCompatActivity() {
 
     private fun dismiss() {
         done = true
-        stopService(Intent(this, AlarmService::class.java))
+        stopRing()
         if (!test) Scheduler.followUp(this)
         scanner?.pause()
         scanner?.visibility = View.GONE

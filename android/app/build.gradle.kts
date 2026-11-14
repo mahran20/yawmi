@@ -5,14 +5,14 @@ plugins {
 
 android {
     namespace = "app.yawmi"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "app.yawmi"
         minSdk = 26
-        targetSdk = 34
-        versionCode = 4
-        versionName = "2.1"
+        targetSdk = 36
+        versionCode = 5
+        versionName = "3.0"
     }
 
     signingConfigs {

@@ -19,12 +19,15 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.content.pm.PackageInfoCompat
+import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.webkit.WebViewAssetLoader
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
@@ -35,6 +38,7 @@ import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
     private lateinit var web: WebView
+    private lateinit var root: FrameLayout
 
     private val scanLauncher = registerForActivityResult(ScanContract()) { r ->
         val c = r.contents
@@ -56,7 +60,16 @@ class MainActivity : AppCompatActivity() {
         Notifs.ensureChannels(this)
         web = WebView(this)
         web.setBackgroundColor(ContextCompat.getColor(this, R.color.bg))
-        setContentView(web)
+        root = FrameLayout(this)
+        root.setBackgroundColor(ContextCompat.getColor(this, R.color.bg))
+        root.addView(web, FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT))
+        setContentView(root)
+        // The app draws edge to edge (required from Android 15); keep the page clear of the system bars and keyboard.
+        ViewCompat.setOnApplyWindowInsetsListener(root) { v, insets ->
+            val b = insets.getInsets(WindowInsetsCompat.Type.systemBars() or WindowInsetsCompat.Type.ime() or WindowInsetsCompat.Type.displayCutout())
+            v.setPadding(b.left, b.top, b.right, b.bottom)
+            WindowInsetsCompat.CONSUMED
+        }
 
         val loader = WebViewAssetLoader.Builder()
             .addPathHandler("/assets/", WebViewAssetLoader.AssetsPathHandler(this))
@@ -293,8 +306,7 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 try {
                     val c = android.graphics.Color.parseColor(color)
-                    window.statusBarColor = c
-                    window.navigationBarColor = c
+                    root.setBackgroundColor(c)
                     web.setBackgroundColor(c)
                     val ctl = WindowCompat.getInsetsController(window, window.decorView)
                     ctl.isAppearanceLightStatusBars = light

@@ -54,13 +54,14 @@ object Notifs {
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
 
-    fun alarmActivityIntent(ctx: Context, test: Boolean): PendingIntent = PendingIntent.getActivity(
-        ctx, 7000,
-        Intent(ctx, AlarmActivity::class.java)
-            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION)
-            .putExtra("test", test),
-        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-    )
+    fun alarmActivityIntent(ctx: Context, mode: String, test: Boolean, task: String = "", text: String = ""): PendingIntent =
+        PendingIntent.getActivity(
+            ctx, if (mode == "task") 7002 else 7000,
+            Intent(ctx, AlarmActivity::class.java)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION)
+                .putExtra("mode", mode).putExtra("test", test).putExtra("task", task).putExtra("text", text),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
     @SuppressLint("MissingPermission")
     fun post(
@@ -103,7 +104,7 @@ object Notifs {
     fun alarmFallback(ctx: Context, test: Boolean) {
         if (!canPost(ctx)) return
         ensureChannels(ctx)
-        val full = alarmActivityIntent(ctx, test)
+        val full = alarmActivityIntent(ctx, "fajr", test)
         val n = NotificationCompat.Builder(ctx, CH_PRAYER)
             .setSmallIcon(R.drawable.ic_stat)
             .setColor(COLOR)
