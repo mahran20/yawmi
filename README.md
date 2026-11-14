@@ -2,7 +2,9 @@
 
 # يومي
 
-مساحة شخصية لمتابعة يومك: عاداتك وأهدافك ومهامك، زي ما انت عاوزها. ابدأ بصفحة فاضية أو بقوالب جاهزة (الصلوات، القرآن والأذكار، الصحة، العناية الشخصية، تطوير نفسي) وعدّل عليها. ومعاه منبه فجر مش بيسكت غير لما تقوم تمسح كود.
+**يومك بيبدأ من الفجر.**
+
+منبه فجر مش بيسكت غير لما تقوم تمسح كود، وبيقولك تنام إمتى عشان تصحى. وحوالين الفجر بقية يومك: عاداتك وأهدافك ومهامك بمواعيدك انت. ابدأ بـ٥ أسئلة، أو بصفحة فاضية، أو بقوالب جاهزة (الصلوات، القرآن والأذكار، الصحة، العناية الشخصية، تطوير نفسي، رمضان).
 
 ## المميزات
 
@@ -13,6 +15,7 @@
 - **إشعار عند كل أذان** فيه زرار «صليت ✓» يعلّم عليها من غير ما تفتح التطبيق.
 - **تذكير لأي بند** في الساعة اللي تختارها، بس لو لسه ماعلّمتش عليه.
 - **تاسكات ومشاوير** بتفضل موجودة لحد ما تخلصها، ومعاها تذكير اختياري.
+- **Widget** على الشاشة الرئيسية، وعادات بالعدد (٨ كوبايات مية)، وتاريخ وسلسلة لكل عادة، وتقارير للأسبوع والشهر.
 - **منبه الفجر:** بيرن بأعلى صوت ومفيهوش snooze، ومش بيسكت غير لما تمسح QR أو باركود متعلّق بعيد عن سريرك. وفيه بديل طوارئ بمسائل حساب عشان ماتتقفلش برة.
 - **خصوصية:** كل بياناتك على جهازك بس. مفيش حساب ولا تسجيل دخول. التطبيق بيبعت مرة في اليوم إشارة مجهولة فيها نوع الجهاز بس (أندرويد، آيفون، لابتوب) عشان نعرف عدد المستخدمين، وتقدر تقفلها من الإعدادات.
 
@@ -32,7 +35,9 @@
 
 # Yawmi
 
-A personal space to track your day: your own habits, goals and tasks. Start from a blank page or from ready-made packs (prayers, Quran and adhkar, health, personal care, self-development) and change anything. It comes with a Fajr alarm that only stops when you get up and scan a code.
+**Your day starts at Fajr.**
+
+A Fajr alarm that only stops when you get up and scan a code, and a bedtime worked out from Fajr so you can wake up for it. Around Fajr sits the rest of your day: your own habits, goals and tasks, on your schedule. Start with 5 quick questions, a blank page, or ready-made packs (prayers, Quran and adhkar, health, personal care, self-development, Ramadan).
 
 ## Features
 
@@ -43,6 +48,7 @@ A personal space to track your day: your own habits, goals and tasks. Start from
 - **A notification at each adhan** with a "Prayed ✓" button that checks it off without opening the app.
 - **Per-item reminders** at a time you choose, sent only if the item isn't checked yet.
 - **Tasks and errands** that stay until done, with an optional reminder.
+- **A home screen widget**, count habits (8 glasses of water), history and streaks for every habit, and weekly and monthly reports.
 - **Fajr alarm:** full volume, no snooze, stops only when you scan a QR or barcode placed away from your bed. A math-problem fallback means you can never get locked out.
 - **Private:** your data stays on your device. No account, no login. Once a day the app sends an anonymous ping with only the device type (Android, iPhone, laptop) so we can count users. You can turn it off in Settings.
 

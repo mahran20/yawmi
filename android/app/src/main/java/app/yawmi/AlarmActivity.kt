@@ -50,7 +50,7 @@ class AlarmActivity : AppCompatActivity() {
     private val bg = 0xFF141C38.toInt()
     private val mint = 0xFFF4B266.toInt()
     private val white = 0xFFFFFFFF.toInt()
-    private val soft = 0xFFC9DDD5.toInt()
+    private val soft = 0xFFCBD3EE.toInt()
     private val M = ViewGroup.LayoutParams.MATCH_PARENT
     private val W = ViewGroup.LayoutParams.WRAP_CONTENT
 

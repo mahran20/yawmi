@@ -3,7 +3,9 @@
 كل الصور جاهزة في الفولدر ده:
 - `icon-512.png`: أيقونة التطبيق (512×512)
 - `feature-graphic.png`: الصورة الكبيرة (1024×500)
-- `screenshots/`: ٧ صور للموبايل (1080×1920)
+- `screenshots/`: صور للموبايل (1080×1920)
+- `brand.md`: هوية التطبيق (الألوان، الخط، نبرة الكلام)
+- `launch-message.md`: رسايل الإطلاق لصحابك وللمختبِرين
 - ملف التطبيق: `yawmi.aab` من [آخر release](https://github.com/mahran20/yawmi/releases/latest)
 - سياسة الخصوصية: https://mahran20.github.io/yawmi/privacy.html
 
@@ -12,44 +14,64 @@
 ## Store listing: بالعربي (اللغة الأساسية: ar)
 
 **اسم التطبيق (٣٠ حرف بالكتير):**
-يومي: عاداتك وصلواتك ومهامك
+يومي: صحّي للفجر وتابع عاداتك
 
 **وصف قصير (٨٠ حرف بالكتير):**
-تابع صلواتك وعاداتك ومهامك بمواعيدك انت، مع تقارير ومنبه فجر بيصحّيك بجد.
+يومك بيبدأ من الفجر: منبه بيصحّيك للفجر، وعاداتك ومهامك بمواعيدك انت.
 
 **الوصف الكامل:**
-يومي مساحة بسيطة لمتابعة يومك زي ما انت عاوزه.
+يومك بيبدأ من الفجر.
 
-ابدأ بـ٥ أسئلة سريعة: بتشتغل ولا بتدرس، وأيام إجازتك، وبتتمرن كام يوم في الأسبوع، وعاوز تبني إيه. ويومي يبنيلك مساحة على مقاسك. أو ابدأ بصفحة فاضية وابنيها بنفسك.
+الفجر بيفوت أغلبنا عشان النوم المتأخر، مش عشان الإرادة. يومي بيساعدك من الناحيتين: بيقولك تنام إمتى، وبيصحّيك بمنبه مش بيسكت غير لما تقوم فعلاً.
 
-• مواعيد لكل بند: كل يوم، أو أيام معينة (الشغل من الأحد للخميس بس)، أو عدد مرات في الأسبوع (التمرين ٤ مرات). ومش هيتحسب عليك في الإجازة أو يوم الراحة.
+🌅 الفجر الأول
+• منبه فجر بأعلى صوت، ومفيهوش snooze، ومش بيسكت غير لما تمسح كود متعلّق في الحمام.
+• «نام إمتى؟»: بيحسب ميعاد نومك من وقت الفجر، ويفكّرك قبلها بنص ساعة.
+• سجّل صليته إزاي: في وقته، أو في المسجد، أو متأخر. وشوف صحيت الساعة كام.
+• سلسلة الفجر، وآخر ٧ أيام قدامك، وتحدّي ٤٠ يوم فجر.
 • مواقيت الصلاة من غير نت، وإشعار عند كل أذان فيه زرار «صليت ✓».
-• منبه فجر بأعلى صوت ومفيهوش snooze، ومش بيسكت غير لما تقوم تمسح كود متعلّق بعيد عن سريرك.
-• تاسكات ومشاوير بآخر يوم أو بمعاد، ممكن ترن زي المنبه، وتفضل تفكّرك لحد ما تخلصها.
-• تقارير للأسبوع والشهر وأي فترة: نسبة الإنجاز، أقوى وأضعف عادة، أحسن يوم في الأسبوع، والسلسلة.
-• أيقونة ولون لكل قسم وبند، ووضع فاتح وداكن و٦ ألوان.
-• خصوصية: بياناتك على موبايلك بس. مفيش حساب ولا تسجيل دخول.
+
+📋 وباقي يومك بمواعيدك انت
+• ٥ أسئلة سريعة ويومي يبنيلك مساحتك، أو ابنيها بنفسك.
+• كل بند ليه أيامه: الشغل من الأحد للخميس، والتمرين ٤ مرات في الأسبوع. والإجازة مش بتتحسب عليك.
+• عادات بالعدد: ٨ كوبايات مية، ٢٠ صفحة قرآن.
+• تاسكات بآخر يوم أو بمعاد، ممكن ترن، وتفضل تفكّرك لحد ما تخلصها.
+• Widget على الشاشة الرئيسية تعلّم منه من غير ما تفتح التطبيق.
+• تقارير للأسبوع والشهر: نسبة الفجر في وقته، وأقوى وأضعف عادة، وأحسن يوم.
+• وضع رمضان: صيام، سحور، تراويح، وختمة.
+
+🔒 بياناتك على موبايلك بس. مفيش حساب ولا تسجيل دخول.
 
 ---
 
 ## Store listing: English (add as a translation: en-US)
 
-**App name:** Yawmi: Habits, Prayers & Tasks
+**App name:** Yawmi: Fajr Alarm & Habits
 
-**Short description:** Track prayers, habits and tasks on your schedule, with reports and a Fajr alarm.
+**Short description:** Your day starts at Fajr: a real wake-up alarm, plus habits on your schedule.
 
 **Full description:**
-Yawmi is a simple space to track your day the way you want.
+Your day starts at Fajr.
 
-Answer 5 quick questions (work or study, your days off, how many days you train, what you want to build) and Yawmi builds a space that fits you. Or start from a blank page.
+Most of us miss Fajr because we sleep late, not because we lack willpower. Yawmi helps from both ends: it tells you when to sleep, and it wakes you with an alarm that only stops once you are actually up.
 
-• A schedule for every item: every day, specific days (work only Sunday to Thursday), or N times a week (train 4 times). Days off and rest days never count against you.
-• Offline prayer times and a notification at each adhan with a "Prayed ✓" button.
-• A Fajr alarm at full volume with no snooze that only stops when you get up and scan a code placed away from your bed.
-• Tasks and errands with a deadline or a time. They can ring like an alarm and keep reminding you until you mark them done.
-• Reports for this week, this month or any period: completion rate, strongest and weakest habits, best day of the week, streaks.
-• An icon and color for every section and item, light and dark mode, and 6 accent colors.
-• Private: your data stays on your phone. No account, no login.
+🌅 Fajr first
+• A full-volume Fajr alarm with no snooze. It only stops when you scan a code placed in your bathroom.
+• "When should I sleep?": your bedtime is calculated from Fajr time, with a reminder 30 minutes before.
+• Log how you prayed (on time, at the mosque, or late) and see when you woke up.
+• A Fajr streak, the last 7 days at a glance, and a 40-day Fajr challenge.
+• Offline prayer times, with a notification at each adhan and a "Prayed ✓" button.
+
+📋 The rest of your day, on your schedule
+• Answer 5 quick questions and Yawmi builds your space, or build it yourself.
+• Every item has its own days: work Sunday to Thursday, training 4 times a week. Days off never count against you.
+• Count habits: 8 glasses of water, 20 pages of Quran.
+• Tasks with a deadline or a time. They can ring, and they keep reminding you until you are done.
+• A home screen widget to check things off without opening the app.
+• Weekly and monthly reports: Fajr on time, strongest and weakest habits, best day.
+• Ramadan mode: fasting, suhoor, taraweeh and a Quran khatma.
+
+🔒 Your data stays on your phone. No account, no login.
 
 ---
 
@@ -101,9 +123,9 @@ Answer 5 quick questions (work or study, your days off, how many days you train,
 
 ```
 <ar>
-مواعيد لكل بند (أيام معينة أو عدد مرات في الأسبوع)، أسئلة ذكية تبني مساحتك، تقارير أسبوعية وشهرية، وتاسكات بآخر يوم ورنّة وتذكير متكرر.
+هوية جديدة حوالين الفجر: كارت الفجر، وتسجيل صحيانك، و«نام إمتى؟»، وتحدّي ٤٠ يوم. وكمان Widget، وعادات بالعدد، ووضع رمضان، وتاريخ لكل عادة.
 </ar>
 <en-US>
-Per-item schedules (specific days or N times a week), a smart setup, weekly and monthly reports, and tasks with deadlines, alarm rings and repeat reminders.
+A new Fajr-first design: the Fajr card, wake-up times, "when should I sleep?", and a 40-day challenge. Plus a home screen widget, count habits, Ramadan mode and per-habit history.
 </en-US>
 ```
