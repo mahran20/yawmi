@@ -120,6 +120,8 @@ details ul{margin-top:6px}
 .opt{display:flex;align-items:center;gap:10px;text-align:start;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:12px;font-weight:500}
 .opt .e{font-size:1.25rem}
 .opts.one{grid-template-columns:1fr}
+.tag{display:inline-block;font-size:.7rem;font-weight:600;padding:1px 7px;border-radius:99px;background:var(--line);color:var(--muted);vertical-align:middle;margin-inline-start:4px}
+.news{margin:6px 0 14px;padding-inline-start:20px;display:grid;gap:8px;line-height:1.6}
 .opt small{display:block;color:var(--muted);font-weight:400;font-size:.85rem;margin-top:2px}
 .lead{font-size:1.05rem;line-height:1.7;margin:4px 0 10px}
 .how{list-style:none;margin:0;padding:0;display:grid;gap:12px}
@@ -271,6 +273,10 @@ const COLOR_NAMES = {night:"ليلي",green:"أخضر",teal:"فيروزي",blue:
 const ACCENTS = ["night","green","teal","blue","purple","rose"];
 const BG = {light:"#f3f5f9", dark:"#0e1324"};
 const TAGLINE = "يومك بيبدأ من الفجر";
+/* Keep APP_VERSION equal to versionCode in android/app/build.gradle.kts (a test checks it).
+   WHATS_NEW stays on one line: the build copies it into version.json for the update message. */
+const APP_VERSION = 10, APP_VERSION_NAME = "4.3";
+const WHATS_NEW = {"10": ["تقدر تسكّت منبه الفجر بإنك تصوّر حوض الحمام بدل الكود (تجريبي)", "لما ينزل تحديث جديد هيظهرلك إشعار في التطبيق بالجديد فيه"], "9": ["خطوة جديدة في البداية بتشرح منبه الفجر وتجهّزه", "اعمل QR خاص بيك واطبعه أو ابعته لنفسك، أو استخدم باركود أي حاجة في الحمام"]};
 /* Anonymous usage counter (GoatCounter). Sends only a path like /active/iphone, never names, items or history. */
 const GC = "https://mahran.goatcounter.com/count";
 const EMOJIS = ["🌅","🕌","📿","📖","🤲","☀️","🌙","🌅","⭐","🪥","🦷","💧","🥛","🥗","🍎","💊","🥤","🏋️","🏃","🚶","🧘","⚽","🚴","😴","🛏️","📚","✍️","🧠","🎧","💻","💼","📞","💰","🛒","🧹","🧺","👨‍👩‍👧","❤️","🎯","✅","🔥","🌱","☕","🚭","📵","🧴","🪴","🗓️","🎨"];
@@ -308,7 +314,7 @@ function defaults(){ return {
   v:5, onboarded:false,
   settings:{ name:"", theme:{mode:"system", accent:"night"}, fajr:{sleepHours:7, bedtime:true, challenge:null}, loc:{name:"القاهرة",lat:30.0444,lng:31.2357},
     prayerNotify:{fajr:true,dhuhr:true,asr:true,maghrib:true,isha:true},
-    alarm:{enabled:false,offset:15,code:null,qr:null},
+    alarm:{enabled:false,offset:15,code:null,qr:null,method:"code",photo:null},
     nightly:{enabled:true,time:"22:50"}, analytics:true, weekStart:6,
     nag:{enabled:true, every:30, max:3} },
   groups:[], days:{}, tasks:{}, meta:{} }; }
@@ -355,7 +361,7 @@ function normalize(o){
   return o;
 }
 
-let restorePick = null, qrOpen = false, scanFor = "set";
+let restorePick = null, qrOpen = false, scanFor = "set", webUpd = false;
 let S, view = "today", ptCache = {}, status = {}, upd = null, saveFailed = false, recovered = null, confirmDel = null, confirmT = null, showDue = false, saveT = null, toastT = null, sheet = null, installEvt = null;
 let ob = null;           // onboarding answers while the questionnaire is open
 let rp = {period:"week", from:"", to:""}; // reports period
@@ -533,7 +539,7 @@ function fajrHeroHTML(){
   const btns = [];
   if(now >= todayFajr && !st) btns.push(`<button class="fbtn" data-act="fajr-open" data-k="${ck}">صليت الفجر</button>`);
   if(A && !al.enabled) btns.push(`<button class="fbtn${btns.length ? " ghost" : ""}" data-act="fajr-alarm-on">شغّل منبه الفجر</button>`);
-  else if(A && !al.code) btns.push(`<button class="fbtn${btns.length ? " ghost" : ""}" data-act="go-code">سجّل كود المنبه</button>`);
+  else if(A && !al.code && !(al.method === "photo" && al.photo)) btns.push(`<button class="fbtn${btns.length ? " ghost" : ""}" data-act="go-code">سجّل كود المنبه</button>`);
   if(!ch) btns.push(`<button class="fbtn ghost" data-act="chal-start">ابدأ تحدّي ٤٠ يوم فجر</button>`);
   const chal = ch ? (ch.done ? `<div class="fchal"><span>خلصت تحدّي الـ٤٠ يوم: صليت <b>${ar(ch.prayed)}</b> من ٤٠ 🌅</span><button class="fbtn ghost" data-act="chal-start">ابدأ تحدّي جديد</button></div>` : `<div class="fchal"><span>تحدّي ٤٠ يوم: اليوم ${ar(ch.day)} · صليت ${ar(ch.prayed)}</span><div class="bar"><span style="width:${Math.round(ch.prayed/40*100)}%"></span></div></div>`) : "";
   const np = nextPrayer();
@@ -640,7 +646,7 @@ function obHTML(){
     body = `<h1>عاوز تبني إيه كمان؟</h1><section class="card"><p class="hint">اختار اللي يهمك بس. الأقل أحسن من الكتير في الأول.</p><div class="opts">${Object.entries(GOALS).map(([k,v]) => opt("ob-goal", k, o.goals[k], v.icon, v.label)).join("")}</div></section>`;
   } else {
     const gs = obGroups(o);
-    const fajrLine = `<div class="rg" style="${cvar("amber")}"><span class="gicon" aria-hidden="true">🌅</span><div><strong>الفجر</strong><p>${A && o.fajrAlarm ? (S.settings.alarm.code ? "منبه بيصحّيك بالكود · " : "منبه بيصحّيك (سجّل الكود من الإعدادات) · ") : ""}تذكير تنام ${ar(o.sleep)} ساعات · سلسلة وتحدّي ٤٠ يوم</p></div></div>`;
+    const fajrLine = `<div class="rg" style="${cvar("amber")}"><span class="gicon" aria-hidden="true">🌅</span><div><strong>الفجر</strong><p>${A && o.fajrAlarm ? (S.settings.alarm.code || S.settings.alarm.photo ? "منبه بيصحّيك · " : "منبه بيصحّيك (سجّل الكود من الإعدادات) · ") : ""}تذكير تنام ${ar(o.sleep)} ساعات · سلسلة وتحدّي ٤٠ يوم</p></div></div>`;
     body = `<h1>مساحتك جاهزة${o.name ? " يا "+esc(o.name) : ""}</h1><section class="card"><div class="review">${fajrLine}${gs.length ? gs.map(g => `<div class="rg" style="${cvar(g.color)}"><span class="gicon" aria-hidden="true">${g.icon || ""}</span><div><strong>${esc(g.title)}</strong><p>${g.items.map(i => esc(i.label)+(i.sched && i.sched.type === "weekly" ? " ("+schedText(i.sched)+")" : "")).join("، ")}${g.sched ? " · "+schedText(g.sched) : ""}</p></div></div>`).join("") : `<p class="empty">ماختارتش حاجة. هتبدأ بصفحة فاضية وتبني بنفسك.</p>`}</div>
       <p class="hint">تقدر تعدّل أي حاجة من زرار القلم ✏️.</p></section>`;
   }
@@ -711,7 +717,8 @@ function todayHTML(){
     else if(IS_IOS && !STANDALONE) banners += `<div class="banner up"><span>ضيفه للشاشة الرئيسية: دوس زرار المشاركة في Safari، وبعدين «إضافة إلى الشاشة الرئيسية»</span></div>`;
     else if(installEvt && !STANDALONE) banners += `<div class="banner up"><span>ثبّت يومي كتطبيق على جهازك</span><button class="btn sm" data-act="install">ثبّت</button></div>`;
   }
-  if(upd && upd.v > (status.versionCode || 0)) banners += `<div class="banner up"><span>فيه نسخة جديدة من التطبيق</span><button class="btn sm" data-act="update">نزّلها</button></div>`;
+  if(upd && upd.v > (status.versionCode || APP_VERSION)) banners += `<div class="banner up"><span>فيه تحديث جديد${upd.name ? " ("+esc(upd.name)+")" : ""}</span><button class="btn sm ghost" data-act="upd-open">إيه الجديد؟</button><button class="btn sm" data-act="update">حدّث</button></div>`;
+  if(webUpd) banners += `<div class="banner up"><span>نزلت نسخة جديدة من يومي</span><button class="btn sm" data-act="web-reload">حدّث الصفحة</button></div>`;
 
   const np = nextPrayer();
   const al = S.settings.alarm;
@@ -844,6 +851,7 @@ function sheetHTML(){
   if(sheet.type === "task") return taskSheetHTML();
   if(sheet.type === "fajr") return fajrSheetHTML();
   if(sheet.type === "hist") return histSheetHTML();
+  if(sheet.type === "news" || sheet.type === "update") return newsSheetHTML();
   const g = findG(sheet.g); if(!g) return "";
   const isItem = !!sheet.i;
   const it = isItem ? g.items.find(x => x.id === sheet.i) : null; if(isItem && !it) return "";
@@ -1027,8 +1035,8 @@ function qrImage(text){
 }
 function codeCardHTML(inOnboarding){
   if(!A) return "";
-  const al = S.settings.alarm, mine = al.qr && al.code === al.qr;
-  const state = al.code ? `<p class="code-ok">✓ ${mine ? "الـ QR بتاعك متسجل" : "الباركود متسجل"}. المنبه مش هيسكت غير بيه.</p>` : `<p class="code-warn">مفيش كود متسجل لسه. من غيره المنبه هيطلب منك تحل مسائل حساب بس.</p>`;
+  const al = S.settings.alarm, mine = al.qr && al.code === al.qr, byPhoto = al.method === "photo" && al.photo;
+  const state = byPhoto ? `<p class="code-ok">✓ صورة الحوض متسجلة (تجريبي). المنبه هيسكت لما تصوّر نفس المكان.</p>` : al.code ? `<p class="code-ok">✓ ${mine ? "الـ QR بتاعك متسجل" : "الباركود متسجل"}. المنبه مش هيسكت غير بيه.</p>` : `<p class="code-warn">مفيش كود متسجل لسه. من غيره المنبه هيطلب منك تحل مسائل حساب بس.</p>`;
   const qr = qrOpen && al.qr ? `<div class="qrbox">${qrSvg(al.qr)}</div>
       <div class="navrow"><button class="btn ghost" data-act="qr-print">اطبعه</button><button class="btn ghost" data-act="qr-share">ابعته لنفسك</button></div>
       <button class="btn wide" data-act="scan" data-v="verify">علّقته؟ امسحه عشان تتأكد إنه بيتقري</button>
@@ -1036,6 +1044,7 @@ function codeCardHTML(inOnboarding){
   return `<section class="card" id="sec-code"><h2>الكود اللي هيسكّت المنبه</h2>${state}
     <div class="opts one">
       <button class="opt" data-act="scan"><span class="e" aria-hidden="true">🧴</span><span><strong>امسح باركود حاجة في الحمام</strong><small>معجون السنان أو الشامبو أو الصابون. أسهل حاجة ومش محتاج تطبع.</small></span></button>
+      <button class="opt${byPhoto ? " on" : ""}" data-act="photo-setup"><span class="e" aria-hidden="true">📷</span><span><strong>${al.photo ? "صوّر الحوض من جديد" : "صوّر حوض الحمام"} <span class="tag">تجريبي</span></strong><small>من غير طباعة ولا باركود. التطبيق بيتعرّف على المكان على موبايلك، والصورة مابتتحفظش ولا بتطلع منه.</small></span></button>
       <button class="opt${qrOpen ? " on" : ""}" data-act="qr-make"><span class="e" aria-hidden="true">🔳</span><span><strong>${al.qr ? "الـ QR بتاعي" : "اعمل QR خاص بيك"}</strong><small>اطبعه وعلّقه على باب الحمام أو جنب الحوض.</small></span></button>
     </div>${qr}
     ${inOnboarding ? `<h3>جرّبه دلوقتي</h3><button class="btn ghost wide" data-act="test-alarm">جرّب المنبه بعد ٢٠ ثانية</button><p class="hint">دوس، واقفل الشاشة، واستنى لحد ما يرن، وسكّته بالكود. كده تنام وانت متطمّن.</p>
@@ -1202,18 +1211,43 @@ function doImport(){
   save(true); box.value = ""; applyTheme(); render(); toast("اتنقل "+ar(nd)+" علامة و"+ar(nt)+" تاسك"+extra);
 }
 
+/** After an update: show what changed, once. Fresh installs skip it. */
+function whatsNewCheck(){
+  let seen = 0; try{ seen = +localStorage.getItem("seenVer") || 0 }catch(e){}
+  const mark = () => { try{ localStorage.setItem("seenVer", String(APP_VERSION)) }catch(e){} };
+  if(seen >= APP_VERSION) return;
+  // someone who used the app before this message existed has no seenVer yet
+  const existing = seen || (S.onboarded && S.meta.installAt && Date.now() - S.meta.installAt > 864e5);
+  mark();
+  if(!existing || ob) return;
+  const notes = Object.keys(WHATS_NEW).map(Number).filter(v => v > (seen || APP_VERSION - 1) && v <= APP_VERSION).sort((a, b) => b - a).flatMap(v => WHATS_NEW[v]);
+  if(notes.length && !sheet) sheet = {type:"news", notes};
+}
+function newsSheetHTML(){
+  const up = sheet.type === "update", notes = up ? ((upd && upd.notes) || []) : sheet.notes;
+  const title = up ? "فيه تحديث جديد ليومي"+(upd && upd.name ? " ("+esc(upd.name)+")" : "") : "الجديد في يومي "+APP_VERSION_NAME;
+  return `<div class="scrim" data-act="sheet-close"></div><div class="sheet" role="dialog" aria-label="${title}">
+    <div class="head"><h2>${up ? "🎉 " : "✨ "}${title}</h2></div>
+    ${notes.length ? `<ul class="news">${notes.map(n => `<li>${esc(n)}</li>`).join("")}</ul>` : ""}
+    ${up ? `<p class="hint">بينزل ملف التطبيق. افتحه ودوس «تحديث». بياناتك ومنبهاتك هتفضل زي ما هي.</p>
+      <button class="btn wide" data-act="update">حدّث دلوقتي</button><button class="btn link" data-act="sheet-close">بعدين</button>`
+    : `<button class="btn wide" data-act="sheet-close">تمام</button>`}</div>`;
+}
 function checkUpdate(manual){
   if(!A) return;
   let last = 0;
   try{ last = +localStorage.getItem("updChecked") || 0; upd = JSON.parse(localStorage.getItem("upd") || "null") }catch(e){}
-  if(!manual && Date.now() - last < 6*3600e3) return;
+  if(!manual && Date.now() - last < 3600e3) return;
   // version.json is served by GitHub Pages (a CDN, no rate limit); the GitHub API allows only
   // 60 calls an hour per IP, which many phones behind one mobile-carrier IP would exhaust.
-  const viaPages = () => fetch(SITE+"version.json", {cache:"no-store"}).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(j => +j.versionCode || Promise.reject("bad"));
-  const viaApi = () => fetch("https://api.github.com/repos/mahran20/yawmi/releases/latest", {cache:"no-store"}).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(j => parseInt(String(j.tag_name || "").replace(/\D/g, ""), 10) || 0);
+  const viaPages = () => fetch(SITE+"version.json", {cache:"no-store"}).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(j => +j.versionCode ? {v:+j.versionCode, name:String(j.versionName || ""), notes:Array.isArray(j.notes) ? j.notes.map(String).slice(0, 6) : []} : Promise.reject("bad"));
+  const viaApi = () => fetch("https://api.github.com/repos/mahran20/yawmi/releases/latest", {cache:"no-store"}).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(j => ({v:parseInt(String(j.tag_name || "").replace(/\D/g, ""), 10) || 0, notes:[]}));
   viaPages().catch(viaApi)
-    .then(v => {
-      upd = v > (status.versionCode || 0) ? {v} : null;
+    .then(r => {
+      upd = r.v > (status.versionCode || APP_VERSION) ? r : null;
+      // tell the user once per new version, without interrupting setup or another sheet
+      let shown = 0; try{ shown = +localStorage.getItem("updShown") || 0 }catch(e){}
+      if(upd && upd.v > shown && !ob && !sheet){ sheet = {type:"update"}; try{ localStorage.setItem("updShown", String(upd.v)) }catch(e){} }
       try{ localStorage.setItem("updChecked", String(Date.now())); localStorage.setItem("upd", JSON.stringify(upd)) }catch(e){}
       if(manual) toast(upd ? "فيه نسخة جديدة" : "عندك آخر نسخة");
       render();
@@ -1304,7 +1338,9 @@ function onClick(e){
     case "task-clear-due": { const t = S.tasks[sheet.id]; if(!t) break; t.due = null; t.dateOnly = false; t.ring = false; sheet = null; save(true); render(); toast("اتشال المعاد"); break }
     case "toggle-due": showDue = !showDue; render(); if(showDue) focusSel("#new-date"); break;
     case "fix": { const al = S.settings.alarm; go("settings", status.notifications && al.enabled && !al.code ? "sec-alarm" : "sec-perms"); break }
-    case "update": if(A) A.openUrl(APK); else window.open(APK); break;
+    case "update": if(A) A.openUrl(APK); else window.open(APK); if(sheet && sheet.type === "update"){ sheet = null; render() } break;
+    case "upd-open": sheet = {type:"update"}; render(); break;
+    case "web-reload": location.reload(); break;
     case "install": if(installEvt){ installEvt.prompt(); installEvt.userChoice.finally(() => { installEvt = null; render() }) } break;
     /* edit */
     case "grp-add": { const g = mkGroup({title:"قسم جديد", color:COLORS[S.groups.length % COLORS.length]}); S.groups.push(g); save(true); render(); focusSel(`[data-input="grp-title"][data-g="${g.id}"]`, true); break }
@@ -1381,9 +1417,10 @@ function onClick(e){
       const al = S.settings.alarm;
       if(qrOpen){ qrOpen = false; render(); break }
       if(!al.qr) al.qr = newQr();
-      if(al.code !== al.qr){ al.code = al.qr; save(true); toast("ده الكود بتاعك. اطبعه وعلّقه في الحمام") }
+      if(al.code !== al.qr || al.method !== "code"){ al.code = al.qr; al.method = "code"; save(true); toast("ده الكود بتاعك. اطبعه وعلّقه في الحمام") }
       qrOpen = true; render(); break;
     }
+    case "photo-setup": if(A && A.photoSetup) A.photoSetup(); break;
     case "qr-print": if(A && S.settings.alarm.qr) A.printImage(qrImage(S.settings.alarm.qr)); break;
     case "qr-share": if(A && S.settings.alarm.qr) A.shareImage(qrImage(S.settings.alarm.qr)); break;
     case "go-code": go("settings", "sec-code"); break;
@@ -1467,15 +1504,16 @@ window.onNativeChange = ev => {
   if(ev.kind === "check"){ const d = day(ev.date); (d.checks = d.checks || {})[ev.item] = true }
   else if(ev.kind === "count"){ const d = day(ev.date); d.counts = d.counts || {}; d.counts[ev.item] = Math.max(d.counts[ev.item] || 0, ev.n); if(ev.done) (d.checks = d.checks || {})[ev.item] = true }
   else if(ev.kind === "wake"){ const d = day(ev.date); d.fajr = Object.assign(d.fajr || {}, {wake:ev.hm}) }
+  else if(ev.kind === "photo"){ S.settings.alarm.method = "photo"; S.settings.alarm.photo = {labels:ev.labels, at:ev.at}; qrOpen = false; toast("صورة الحوض اتسجلت. المنبه هيسكت بيها") }
   else if(ev.kind === "task"){ const t = S.tasks[ev.id]; if(t && !t.done){ t.done = true; t.doneAt = ev.at } }
   else return;
-  if(!ob && !sheet) render();
+  if(ev.kind === "photo" || (!ob && !sheet)) render();
 };
 window.onNativeScan = code => {
   const verify = scanFor === "verify"; scanFor = "set";
   if(!code){ toast("ماتسجلش كود"); return }
   if(verify){ toast(code === S.settings.alarm.code ? "تمام، الكود بيتقري. المنبه هيسكت بيه" : "ده مش الكود المتسجل. امسح الـ QR اللي طبعته"); return }
-  S.settings.alarm.code = code; if(code !== S.settings.alarm.qr) qrOpen = false; save(true); render();
+  S.settings.alarm.code = code; S.settings.alarm.method = "code"; if(code !== S.settings.alarm.qr) qrOpen = false; save(true); render();
   toast("الكود اتسجل. المنبه مش هيسكت غير بيه");
 };
 window.onNativeLocation = loc => {
@@ -1494,8 +1532,13 @@ setInterval(() => {
 }, 30000);
 
 window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if(view === "today" && !ob) render() });
-if(!A && "serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(() => {});
-load(); applyTheme(); render(); checkUpdate(false); track(); reportCrash();
+if(!A && "serviceWorker" in navigator && location.protocol === "https:"){
+  // a new version took over an already-open page: offer a reload (first visits don't count)
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if(hadController){ webUpd = true; render() } });
+  navigator.serviceWorker.register("sw.js").then(r => r.update()).catch(() => {});
+}
+load(); applyTheme(); whatsNewCheck(); render(); checkUpdate(false); track(); reportCrash();
 if(recovered) toast("رجّعت بياناتك من نسخة "+fmtSnap(recovered));
 window.__yawmi = {calcTimes, normalize, defaults, computeReport, qrImage, get S(){ return S }};
 })();

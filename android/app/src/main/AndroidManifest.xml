@@ -78,6 +78,12 @@
                 <action android:name="android.intent.action.DATE_CHANGED" />
             </intent-filter>
         </receiver>
+        <activity
+            android:name=".PhotoSetupActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/AlarmTheme" />
+
         <!-- shares the alarm QR image with other apps (WhatsApp, print shops, email) -->
         <provider
             android:name="androidx.core.content.FileProvider"

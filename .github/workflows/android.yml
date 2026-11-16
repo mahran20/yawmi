@@ -101,7 +101,13 @@ jobs:
         # the app checks this file on GitHub Pages (a CDN) instead of the rate-limited GitHub API
         run: |
           name=$(grep -oP 'versionName\s*=\s*"\K[^"]+' android/app/build.gradle.kts)
-          printf '{"versionCode": %s, "versionName": "%s"}\n' "${{ steps.v.outputs.code }}" "$name" > version.json
+          CODE="${{ steps.v.outputs.code }}" NAME="$name" python3 - <<'PY'
+          import json, os, re
+          page = open("android/app/src/main/assets/index.html", encoding="utf-8").read()
+          notes = json.loads(re.search(r"^const WHATS_NEW = (\{.*\});$", page, re.M).group(1)).get(os.environ["CODE"], [])
+          out = {"versionCode": int(os.environ["CODE"]), "versionName": os.environ["NAME"], "notes": notes}
+          open("version.json", "w", encoding="utf-8").write(json.dumps(out, ensure_ascii=False) + "\n")
+          PY
           git config user.name "build-bot"
           git config user.email "build-bot@users.noreply.github.com"
           git add version.json

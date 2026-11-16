@@ -109,6 +109,15 @@ object Store {
         JSONObject().put("kind", "count").put("date", date).put("item", item).put("n", n).put("done", n >= target)
     }
 
+    /** The sink photo's reference labels; the alarm switches to the photo method. */
+    fun setPhoto(ctx: Context, labels: List<String>) = mutate(ctx) { o ->
+        val arr = org.json.JSONArray(labels)
+        val at = System.currentTimeMillis()
+        o.child("settings").child("alarm").put("method", "photo")
+            .put("photo", JSONObject().put("labels", arr).put("at", at))
+        JSONObject().put("kind", "photo").put("labels", org.json.JSONArray(labels)).put("at", at)
+    }
+
     fun markTask(ctx: Context, id: String) = mutate(ctx) { o ->
         val t = o.optJSONObject("tasks")?.optJSONObject(id) ?: return@mutate null
         val at = System.currentTimeMillis()

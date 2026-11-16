@@ -11,8 +11,8 @@ android {
         applicationId = "app.yawmi"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "4.2"
+        versionCode = 10
+        versionName = "4.3"
     }
 
     signingConfigs {
@@ -53,6 +53,12 @@ dependencies {
     implementation("androidx.webkit:webkit:1.12.1")
     implementation("com.journeyapps:zxing-android-embedded:4.3.0")
     implementation("androidx.print:print:1.0.0")
+
+    // "photograph your sink" alarm method: camera + on-device image labels (bundled model, works offline)
+    implementation("androidx.camera:camera-camera2:1.4.1")
+    implementation("androidx.camera:camera-lifecycle:1.4.1")
+    implementation("androidx.camera:camera-view:1.4.1")
+    implementation("com.google.mlkit:image-labeling:17.0.9")
 
     // plain JVM unit tests; the real org.json replaces Android's stub version
     testImplementation("junit:junit:4.13.2")

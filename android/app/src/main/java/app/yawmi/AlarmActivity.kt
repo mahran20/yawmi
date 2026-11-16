@@ -31,11 +31,16 @@ import java.time.format.DateTimeFormatter
 
 /**
  * Shown over the lock screen while the alarm rings.
- * The alarm stops only when the registered barcode is scanned,
+ * The alarm stops only when the registered barcode is scanned (or the registered sink is
+ * photographed, if the user chose that),
  * or (backup, so nobody is ever locked out) after 3 math problems.
  */
 class AlarmActivity : AppCompatActivity() {
     private var scanner: DecoratedBarcodeView? = null
+    private var photo: PhotoCheck? = null
+    private var photoView: View? = null
+    private var photoRef: List<String> = emptyList()
+    private var shootBtn: Button? = null
     private lateinit var status: TextView
     private lateinit var mathBox: LinearLayout
     private lateinit var problem: TextView
@@ -83,7 +88,12 @@ class AlarmActivity : AppCompatActivity() {
         }
         test = intent.getBooleanExtra("test", false)
         val st = Store.settings(this)
-        code = st.optJSONObject("alarm")?.str("code")
+        val al = st.optJSONObject("alarm")
+        code = al?.str("code")
+        if (al?.optString("method") == "photo") {
+            val arr = al.optJSONObject("photo")?.optJSONArray("labels")
+            if (arr != null) photoRef = (0 until arr.length()).map { arr.optString(it) }
+        }
         buildUi(st.str("name"))
     }
 
@@ -237,7 +247,18 @@ class AlarmActivity : AppCompatActivity() {
 
         val camOk = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) ==
             PackageManager.PERMISSION_GRANTED
-        if (code != null && camOk) {
+        if (photoRef.size >= PhotoCheck.MIN_REFERENCE && camOk) {
+            val pv = androidx.camera.view.PreviewView(this)
+            frame.addView(pv, 0, FrameLayout.LayoutParams(M, M))
+            photoView = pv
+            val p = PhotoCheck(this, pv)
+            photo = p
+            p.start { showMath() }
+            val btn = pill("صوّر الحوض", mint, bg).apply { setOnClickListener { shootPhoto() } }
+            root.addView(btn, root.indexOfChild(switchBtn), LinearLayout.LayoutParams(M, W).apply { topMargin = dp(12) })
+            shootBtn = btn
+            status.text = "روح الحمام وصوّر الحوض عشان المنبه يسكت"
+        } else if (code != null && camOk) {
             val bv = DecoratedBarcodeView(this)
             bv.setStatusText("")
             frame.addView(bv, 0, FrameLayout.LayoutParams(M, M))
@@ -260,6 +281,22 @@ class AlarmActivity : AppCompatActivity() {
         }
     }
 
+    private fun shootPhoto() {
+        val p = photo ?: return
+        if (done) return
+        shootBtn?.isEnabled = false
+        status.text = "ثانية..."
+        p.shoot { labels ->
+            shootBtn?.isEnabled = true
+            if (done) return@shoot
+            when {
+                labels == null -> status.text = "مقدرتش أصوّر. جرب تاني."
+                PhotoCheck.matches(photoRef, labels) -> dismiss()
+                else -> status.text = "مش شبه المكان اللي سجلته. صوّر الحوض من نفس الزاوية والنور مفتوح."
+            }
+        }
+    }
+
     private fun onScan(value: String?) {
         if (done || value == null) return
         if (value == code) dismiss() else status.text = "ده مش نفس الكود. امسح الحاجة اللي سجلتها."
@@ -268,6 +305,8 @@ class AlarmActivity : AppCompatActivity() {
     private fun showMath() {
         scanner?.pause()
         scanner?.visibility = View.GONE
+        photoView?.visibility = View.GONE
+        shootBtn?.visibility = View.GONE
         mathBox.visibility = View.VISIBLE
         switchBtn.visibility = View.GONE
         status.text = "حل ٣ مسائل صح عشان المنبه يسكت"
@@ -313,6 +352,8 @@ class AlarmActivity : AppCompatActivity() {
         }
         scanner?.pause()
         scanner?.visibility = View.GONE
+        photoView?.visibility = View.GONE
+        shootBtn?.visibility = View.GONE
         mathBox.visibility = View.GONE
         switchBtn.visibility = View.GONE
         status.textSize = 22f
@@ -328,5 +369,10 @@ class AlarmActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         scanner?.pause()
+    }
+
+    override fun onDestroy() {
+        photo?.close()
+        super.onDestroy()
     }
 }

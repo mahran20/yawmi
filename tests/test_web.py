@@ -32,7 +32,7 @@ FAKE_ANDROID = """
     status: () => JSON.stringify({notifications:true, exact:true, fullScreen:true, battery:true, camera:true, version:"test", versionCode:7}),
     prayerTimes: () => "",
     shareImage: d => window.__calls.push("shareImage:"+d.slice(0, 22)), printImage: d => window.__calls.push("printImage:"+d.slice(0, 22)),
-    scanCode: () => window.__calls.push("scan"), testAlarm: () => window.__calls.push("testAlarm"),
+    scanCode: () => window.__calls.push("scan"), photoSetup: () => window.__calls.push("photoSetup"), testAlarm: () => window.__calls.push("testAlarm"),
     setBars(){}, share(){}, copy(){}, openUrl(){}, requestNotifications(){}, openExactAlarmSettings(){},
     openFullScreenSettings(){}, requestBattery(){}, requestLocation(){}
   };
@@ -78,7 +78,7 @@ class App:
             self.pings.append(url)
             return route.fulfill(status=204, body="")
         if url.endswith("/version.json"):
-            return route.fulfill(status=200, content_type="application/json", body=json.dumps({"versionCode": 99}))
+            return route.fulfill(status=200, content_type="application/json", body=json.dumps({"versionCode": 99, "versionName": "9.9", "notes": ["حاجة جديدة"]}))
         return route.abort()
 
     def click(self, sel):
@@ -359,7 +359,7 @@ def test_update_check_uses_pages_not_api(app):
     a.js("localStorage.removeItem('updChecked')")
     a.reload()
     a.page.wait_for_timeout(200)
-    assert json.loads(a.js("localStorage.getItem('upd')")) == {"v": 99}
+    assert json.loads(a.js("localStorage.getItem('upd')"))["v"] == 99
     assert not any("api.github.com" in r for r in a.requests)
 
 
@@ -431,3 +431,61 @@ def test_qr_image_is_a_png(app):
     a = app(android=True)
     url = a.js("window.__yawmi.qrImage('YAWMI-TEST1234')")
     assert url.startswith("data:image/png;base64,") and len(url) > 20000
+
+
+# ---------- photo method and update messages ----------
+
+def test_sink_photo_option(app):
+    a = app(android=True)
+    a.click("[data-act=ob-next]"); a.click("[data-act=ob-next]")
+    a.click("[data-act=photo-setup]")
+    assert "photoSetup" in a.js("window.__calls")
+    a.js("window.onNativeChange({kind:'photo', labels:['Sink','Tap','Tile'], at:1})")
+    al = a.S()["settings"]["alarm"]
+    assert al["method"] == "photo" and al["photo"]["labels"] == ["Sink", "Tap", "Tile"]
+    assert "صورة الحوض متسجلة" in a.page.text_content("#sec-code")
+    # scanning a code switches back to the code method
+    a.click("[data-act=scan] >> nth=0")
+    a.js("window.onNativeScan('6221024240102')")
+    assert a.S()["settings"]["alarm"]["method"] == "code"
+
+
+def test_update_message_shows_once(app):
+    a = app(android=True)
+    a.onboard()
+    a.js("localStorage.removeItem('updChecked')")
+    a.reload()
+    a.page.wait_for_timeout(200)
+    assert a.page.is_visible(".news") and "حاجة جديدة" in a.page.text_content(".sheet")
+    assert "9.9" in a.page.text_content(".sheet")
+    a.click(".sheet [data-act=update]")
+    assert not a.page.is_visible(".sheet")
+    assert a.page.is_visible("[data-act=upd-open]")  # the banner stays until they update
+    a.js("localStorage.removeItem('updChecked')")
+    a.reload()
+    a.page.wait_for_timeout(200)
+    assert not a.page.is_visible(".sheet")
+
+
+def test_whats_new_after_updating(app):
+    a = app()
+    a.onboard()
+    assert not a.page.is_visible(".sheet")  # a fresh install doesn't get it
+    a.js("localStorage.setItem('seenVer', '9')")
+    a.reload()
+    assert a.page.is_visible(".news")
+    a.click(".sheet [data-act=sheet-close]")
+    a.reload()
+    assert not a.page.is_visible(".sheet")
+
+
+def test_version_matches_the_android_build():
+    import re
+    page = (ROOT / "android/app/src/main/assets/index.html").read_text(encoding="utf-8")
+    gradle = (ROOT / "android/app/build.gradle.kts").read_text(encoding="utf-8")
+    code = re.search(r"versionCode = (\d+)", gradle).group(1)
+    name = re.search(r'versionName = "([^"]+)"', gradle).group(1)
+    m = re.search(r'^const APP_VERSION = (\d+), APP_VERSION_NAME = "([^"]+)";$', page, re.M)
+    assert m and m.group(1) == code and m.group(2) == name, "update APP_VERSION in index.html"
+    notes = json.loads(re.search(r"^const WHATS_NEW = (\{.*\});$", page, re.M).group(1))
+    assert notes.get(code), "add the new version's notes to WHATS_NEW"

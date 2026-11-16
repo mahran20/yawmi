@@ -360,6 +360,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        /** Opens the sink photo setup (experimental alarm method). */
+        @JavascriptInterface
+        fun photoSetup() {
+            runOnUiThread { startActivity(Intent(this@MainActivity, PhotoSetupActivity::class.java)) }
+        }
+
         @JavascriptInterface
         fun shareImage(dataUrl: String) {
             val f = pngFromDataUrl(dataUrl) ?: return
