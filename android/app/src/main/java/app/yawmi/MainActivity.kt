@@ -11,7 +11,9 @@ import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
+import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.util.Base64
 import android.os.PowerManager
 import android.provider.Settings
 import android.webkit.JavascriptInterface
@@ -24,10 +26,12 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.content.pm.PackageInfoCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.print.PrintHelper
 import androidx.webkit.WebViewAssetLoader
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
@@ -297,7 +301,7 @@ class MainActivity : AppCompatActivity() {
             runOnUiThread {
                 scanLauncher.launch(
                     ScanOptions()
-                        .setPrompt("امسح باركود حاجة بعيدة عن سريرك")
+                        .setPrompt("امسح الباركود أو الـ QR اللي في الحمام")
                         .setBeepEnabled(true)
                         .setOrientationLocked(false)
                 )
@@ -340,6 +344,48 @@ class MainActivity : AppCompatActivity() {
                     ctl.isAppearanceLightNavigationBars = light
                 } catch (e: Exception) {
                     // keep the theme colors
+                }
+            }
+        }
+
+        /** Saves a PNG data URL from the page into the cache; null if it isn't one. */
+        private fun pngFromDataUrl(dataUrl: String): java.io.File? {
+            if (!dataUrl.startsWith("data:image/png;base64,")) return null
+            return try {
+                val bytes = Base64.decode(dataUrl.substringAfter(","), Base64.DEFAULT)
+                val dir = java.io.File(cacheDir, "shared").apply { mkdirs() }
+                java.io.File(dir, "yawmi-alarm-code.png").apply { writeBytes(bytes) }
+            } catch (e: Exception) {
+                null
+            }
+        }
+
+        @JavascriptInterface
+        fun shareImage(dataUrl: String) {
+            val f = pngFromDataUrl(dataUrl) ?: return
+            runOnUiThread {
+                try {
+                    val uri = FileProvider.getUriForFile(this@MainActivity, "$packageName.files", f)
+                    val i = Intent(Intent.ACTION_SEND).setType("image/png")
+                        .putExtra(Intent.EXTRA_STREAM, uri)
+                        .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                    startActivity(Intent.createChooser(i, "ابعت كود المنبه"))
+                } catch (e: Exception) {
+                    // nothing to share with
+                }
+            }
+        }
+
+        @JavascriptInterface
+        fun printImage(dataUrl: String) {
+            val f = pngFromDataUrl(dataUrl) ?: return
+            runOnUiThread {
+                try {
+                    val bmp = BitmapFactory.decodeFile(f.path) ?: return@runOnUiThread
+                    PrintHelper(this@MainActivity).apply { scaleMode = PrintHelper.SCALE_MODE_FIT }
+                        .printBitmap("كود منبه الفجر", bmp)
+                } catch (e: Exception) {
+                    // no print service on this phone
                 }
             }
         }

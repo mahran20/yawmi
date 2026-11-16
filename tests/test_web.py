@@ -31,8 +31,10 @@ FAKE_ANDROID = """
     lastCrash: () => { const c = get("crash", ""); ss.removeItem("crash"); return c },
     status: () => JSON.stringify({notifications:true, exact:true, fullScreen:true, battery:true, camera:true, version:"test", versionCode:7}),
     prayerTimes: () => "",
+    shareImage: d => window.__calls.push("shareImage:"+d.slice(0, 22)), printImage: d => window.__calls.push("printImage:"+d.slice(0, 22)),
+    scanCode: () => window.__calls.push("scan"), testAlarm: () => window.__calls.push("testAlarm"),
     setBars(){}, share(){}, copy(){}, openUrl(){}, requestNotifications(){}, openExactAlarmSettings(){},
-    openFullScreenSettings(){}, requestBattery(){}, requestLocation(){}, scanCode(){}, testAlarm(){}
+    openFullScreenSettings(){}, requestBattery(){}, requestLocation(){}
   };
 })();
 """
@@ -96,6 +98,8 @@ class App:
         p = self.page
         p.fill("#ob-name", name); self.click("[data-act=ob-next]")
         self.click("[data-act=ob-fajr][data-v=some]"); self.click("[data-act=ob-next]")
+        if p.is_visible(".how"):  # the alarm step, in the Android app only
+            self.click("[data-act=ob-next]")
         self.click("[data-act=ob-work][data-v=office]"); self.click("[data-act=ob-next]")
         self.click("[data-act=ob-next]")
         self.click("[data-act=ob-train][data-v='4']"); self.click("[data-act=ob-supp][data-v=creatine]"); self.click("[data-act=ob-next]")
@@ -364,3 +368,66 @@ def test_update_check_uses_pages_not_api(app):
 def test_web_copy_is_in_sync():
     r = subprocess.run([sys.executable, str(ROOT / "tools/sync-web.py"), "--check"], capture_output=True, text=True)
     assert r.returncode == 0, r.stderr or r.stdout
+
+
+# ---------- the Fajr alarm code ----------
+
+def test_web_onboarding_has_no_alarm_step(app):
+    a = app()
+    a.click("[data-act=ob-next]"); a.click("[data-act=ob-next]")
+    assert not a.page.is_visible(".how") and a.page.locator(".dots span").count() == 7
+
+
+def test_alarm_step_explains_and_makes_a_qr(app):
+    a = app(android=True)
+    assert "تمسح كود" in a.page.text_content(".lead")
+    a.click("[data-act=ob-next]"); a.click("[data-act=ob-next]")
+    assert a.page.is_visible(".how") and a.page.locator(".dots span").count() == 8
+    assert "مفيش كود متسجل" in a.page.text_content("#sec-code")
+    a.click("[data-act=qr-make]")
+    al = a.S()["settings"]["alarm"]
+    assert al["qr"].startswith("YAWMI-") and al["code"] == al["qr"]
+    assert a.page.is_visible(".qrbox svg") and "الـ QR بتاعك متسجل" in a.page.text_content("#sec-code")
+    a.click("[data-act=qr-share]"); a.click("[data-act=qr-print]")
+    calls = a.js("window.__calls")
+    assert "shareImage:data:image/png;base64," in calls and "printImage:data:image/png;base64," in calls
+    # the same QR comes back when opened again
+    a.click("[data-act=qr-make]"); a.click("[data-act=qr-make]")
+    assert a.S()["settings"]["alarm"]["qr"] == al["qr"]
+
+
+def test_verify_scan_does_not_change_the_code(app):
+    a = app(android=True)
+    a.click("[data-act=ob-next]"); a.click("[data-act=ob-next]")
+    a.click("[data-act=qr-make]")
+    qr = a.S()["settings"]["alarm"]["qr"]
+    a.click("[data-act=scan][data-v=verify]")
+    a.js("window.onNativeScan('5449000000996')")
+    assert "ده مش الكود المتسجل" in a.toast() and a.S()["settings"]["alarm"]["code"] == qr
+    a.click("[data-act=scan][data-v=verify]")
+    a.js(f"window.onNativeScan({json.dumps(qr)})")
+    assert "الكود بيتقري" in a.toast()
+
+
+def test_bathroom_barcode_replaces_the_qr(app):
+    a = app(android=True)
+    a.click("[data-act=ob-next]"); a.click("[data-act=ob-next]")
+    a.click("[data-act=qr-make]")
+    a.click("[data-act=scan] >> nth=0")
+    a.js("window.onNativeScan('6221024240102')")
+    assert a.S()["settings"]["alarm"]["code"] == "6221024240102"
+    assert "الباركود متسجل" in a.page.text_content("#sec-code") and not a.page.is_visible(".qrbox")
+
+
+def test_fajr_card_asks_for_the_code(app):
+    a = app(android=True)
+    a.onboard()
+    assert a.S()["settings"]["alarm"]["enabled"] is True
+    a.click("[data-act=go-code]")
+    assert a.page.is_visible("#sec-code")
+
+
+def test_qr_image_is_a_png(app):
+    a = app(android=True)
+    url = a.js("window.__yawmi.qrImage('YAWMI-TEST1234')")
+    assert url.startswith("data:image/png;base64,") and len(url) > 20000
