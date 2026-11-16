@@ -84,6 +84,11 @@
             android:screenOrientation="portrait"
             android:theme="@style/AlarmTheme" />
 
+        <!-- ask Play services to fetch the image-labeling model at install time, not at 4 AM -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="ica" />
+
         <!-- shares the alarm QR image with other apps (WhatsApp, print shops, email) -->
         <provider
             android:name="androidx.core.content.FileProvider"

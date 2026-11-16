@@ -99,7 +99,7 @@ class PhotoSetupActivity : AppCompatActivity() {
             busy = false
             shoot.isEnabled = true
             when {
-                labels == null -> fail("مقدرتش أصوّر. جرب تاني.")
+                labels == null -> fail("مقدرتش أتعرّف على الصورة. لو دي أول مرة، الموبايل بينزّل أداة التعرّف على الصور: اتأكد إن النت شغال وجرب كمان دقيقة.")
                 labels.size < PhotoCheck.MIN_REFERENCE -> {
                     first = null
                     fail("مش شايف تفاصيل كفاية. قرّب من الحوض، وخلّي النور مفتوح، وجرب تاني.")
