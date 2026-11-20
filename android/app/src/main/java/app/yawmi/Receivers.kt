@@ -21,11 +21,19 @@ class ReminderReceiver : BroadcastReceiver() {
                     Store.markItem(ctx, date, item)
                 }
                 NotificationManagerCompat.from(ctx).cancel(intent.getIntExtra("nid", 0))
+                if (kind == "prayer" && Store.settings(ctx).optBoolean("prayerWords", true)) {
+                    PageData.prayerWord(ctx, item)?.let { (opener, word) -> Notifs.quiet(ctx, 4500, opener, word) }
+                }
             }
-            Scheduler.ACT_REMIND -> show(ctx, intent, kind, item, date)
+            Scheduler.ACT_REMIND -> {
+                if (kind == "brief") goAsyncResult = goAsync()
+                show(ctx, intent, kind, item, date)
+            }
         }
         Scheduler.rescheduleAll(ctx)
     }
+
+    private var goAsyncResult: PendingResult? = null
 
     private fun show(ctx: Context, intent: Intent, kind: String, item: String, date: String) {
         val code = intent.getIntExtra("code", 0)
@@ -60,17 +68,18 @@ class ReminderReceiver : BroadcastReceiver() {
                 action = "خلصت ✓"
                 if (attempt > 0) title = "لسه ماخلصتش؟"
             }
-            "nightly" -> {
-                val r = Store.remaining(ctx, date)
-                val name = Store.settings(ctx).str("name")
-                if (r.left == 0) {
-                    title = if (name != null) "خلصت يومك كله يا $name" else "خلصت يومك كله"
-                    text = "تصبح على خير."
-                } else {
-                    title = "فاضلك ${Notifs.ar(r.left)} من ${Notifs.ar(r.total)}"
-                    text = "علّم على اللي عملته قبل ما تنام"
+            "nightly", "brief" -> {
+                val data = Store.obj(ctx)
+                val day = try {
+                    LocalDate.parse(date)
+                } catch (e: Exception) {
+                    LocalDate.now()
                 }
-                if (r.tasks > 0) text += " · ${Notifs.ar(r.tasks)} تاسك لسه مفتوح"
+                val zone = java.time.ZoneId.systemDefault()
+                val note = if (kind == "brief") Brief.morning(data, day, zone) else Brief.evening(data, day, zone)
+                title = note.title
+                text = note.text
+                if (kind == "brief") Updates.daily(ctx, goAsyncResult)
             }
         }
         val channel = if (kind == "prayer") Notifs.CH_PRAYER else Notifs.CH_REMIND
@@ -113,6 +122,8 @@ class AlarmReceiver : BroadcastReceiver() {
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        Scheduler.rescheduleAll(context.applicationContext)
+        val ctx = context.applicationContext
+        Scheduler.rescheduleAll(ctx)
+        if (intent.action == Intent.ACTION_MY_PACKAGE_REPLACED) Updates.justUpdated(ctx)
     }
 }

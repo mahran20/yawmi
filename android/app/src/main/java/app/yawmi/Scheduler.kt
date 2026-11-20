@@ -20,6 +20,7 @@ import kotlin.math.abs
  *
  * Request code ranges:
  *   999 tick · 1000 Fajr alarm · 1001 test alarm · 2000+ adhan · 3000+ items · 4000 nightly · 4100 bedtime
+ *   4200 morning brief · (notification ids only: 4300 update available · 4310 updated · 4400 tip · 4500 prayer word)
  *   5000+ task reminders · 6000 Fajr follow-up · 8000+ task rings · 9000+ snoozed rings · 30000+ repeat reminders
  */
 object Scheduler {
@@ -32,6 +33,7 @@ object Scheduler {
     const val CODE_ALARM = 1000
     const val CODE_TEST = 1001
     const val CODE_NIGHTLY = 4000
+    const val CODE_BRIEF = 4200
     const val CODE_FOLLOW = 6000
     private const val RING_FIRST = 8000
     private const val RING_LAST = 8899
@@ -184,6 +186,20 @@ object Scheduler {
             }
         }
 
+        // Morning brief (also checks for updates and, rarely, suggests an unused feature)
+        val brief = st.optJSONObject("brief")
+        if (brief == null || brief.optBoolean("enabled", true)) {
+            val bt = try {
+                LocalTime.parse(brief?.str("time") ?: "08:00")
+            } catch (e: Exception) {
+                LocalTime.of(8, 0)
+            }
+            var t = millis(today, bt, zone)
+            if (t <= soon) t = millis(tomorrow, bt, zone)
+            remind(ctx, am, CODE_BRIEF, t, "brief", "", logicalDateAt(t, zone).toString(), "", "")
+            codes.add(CODE_BRIEF)
+        }
+
         // End-of-day check-in
         val nightly = st.optJSONObject("nightly")
         if (nightly == null || nightly.optBoolean("enabled", true)) {
@@ -210,7 +226,7 @@ object Scheduler {
                 if (task.optBoolean("done", false)) continue
                 val due = task.optLong("due", 0L)
                 if (due <= 0L) continue
-                val text = task.optString("text", "")
+                val text = Brief.icon(task) + " " + task.optString("text", "")
                 val ring = task.optBoolean("ring", false)
                 if (task.optBoolean("dateOnly", false)) {
                     val day = Instant.ofEpochMilli(due).atZone(zone).toLocalDate()
@@ -230,6 +246,12 @@ object Scheduler {
                         }
                     }
                 } else if (due > soon) {
+                    // a heads-up 15 minutes before a meeting
+                    val early = due - 15 * 60_000L
+                    if (task.optString("kind") == "meeting" && early > soon && tc < 5900) {
+                        remind(ctx, am, tc, early, "task", id, "", "بعد ربع ساعة", text)
+                        codes.add(tc); tc++
+                    }
                     if (ring && rc <= RING_LAST) {
                         ringTask(ctx, am, rc, due, id, text)
                         codes.add(rc); rc++

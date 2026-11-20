@@ -91,6 +91,8 @@ class App:
         return self.page.evaluate(code)
 
     def reload(self):
+        # let Chromium commit storage writes first; a reload right after a write can read stale data
+        self.page.wait_for_timeout(300)
         self.page.reload()
         self.page.wait_for_timeout(150)
 
@@ -100,7 +102,7 @@ class App:
         self.click("[data-act=ob-fajr][data-v=some]"); self.click("[data-act=ob-next]")
         if p.is_visible(".how"):  # the alarm step, in the Android app only
             self.click("[data-act=ob-next]")
-        self.click("[data-act=ob-work][data-v=office]"); self.click("[data-act=ob-next]")
+        self.click("[data-act=ob-area][data-v=work]"); self.click("[data-act=ob-next]")
         self.click("[data-act=ob-next]")
         self.click("[data-act=ob-train][data-v='4']"); self.click("[data-act=ob-supp][data-v=creatine]"); self.click("[data-act=ob-next]")
         for g in ("water", "teeth", "read"):
@@ -358,7 +360,7 @@ def test_update_check_uses_pages_not_api(app):
     a.onboard()
     a.js("localStorage.removeItem('updChecked')")
     a.reload()
-    a.page.wait_for_timeout(200)
+    a.page.wait_for_function("localStorage.getItem('upd') && localStorage.getItem('upd') !== 'null'", timeout=5000)
     assert json.loads(a.js("localStorage.getItem('upd')"))["v"] == 99
     assert not any("api.github.com" in r for r in a.requests)
 
@@ -453,17 +455,15 @@ def test_sink_photo_option(app):
 def test_update_message_shows_once(app):
     a = app(android=True)
     a.onboard()
-    a.js("localStorage.removeItem('updChecked')")
-    a.reload()
-    a.page.wait_for_timeout(200)
-    assert a.page.is_visible(".news") and "حاجة جديدة" in a.page.text_content(".sheet")
-    assert "9.9" in a.page.text_content(".sheet")
+    # checked here directly: reloading right after a save can read stale fake-native storage
+    a.js("localStorage.removeItem('updChecked'); localStorage.removeItem('updShown'); window.__yawmi.checkUpdate(false)")
+    a.page.wait_for_selector(".news", timeout=5000)
+    assert "حاجة جديدة" in a.page.text_content(".sheet") and "9.9" in a.page.text_content(".sheet")
     a.click(".sheet [data-act=update]")
     assert not a.page.is_visible(".sheet")
     assert a.page.is_visible("[data-act=upd-open]")  # the banner stays until they update
-    a.js("localStorage.removeItem('updChecked')")
-    a.reload()
-    a.page.wait_for_timeout(200)
+    a.js("localStorage.removeItem('updChecked'); window.__yawmi.checkUpdate(false)")
+    a.page.wait_for_timeout(300)
     assert not a.page.is_visible(".sheet")
 
 
@@ -489,3 +489,93 @@ def test_version_matches_the_android_build():
     assert m and m.group(1) == code and m.group(2) == name, "update APP_VERSION in index.html"
     notes = json.loads(re.search(r"^const WHATS_NEW = (\{.*\});$", page, re.M).group(1))
     assert notes.get(code), "add the new version's notes to WHATS_NEW"
+
+
+# ---------- personal onboarding, prayer words, task types, briefs ----------
+
+def test_onboarding_uses_your_own_words(app):
+    a = app()
+    p = a.page
+    p.fill("#ob-name", "سارة"); a.click("[data-act=ob-next]")
+    a.click("[data-act=ob-next]")  # Fajr step
+    a.click("[data-act=ob-area][data-v=study]")
+    p.fill("#ob-t-study", "ساعة أحياء\nحل مسائل كيميا")
+    a.click("[data-act=ob-day][data-k=study][data-v='4']")  # drop Thursday
+    a.click("[data-act=ob-area][data-v=other]")
+    p.fill("[data-input=ob-other-name]", "الجيم")
+    p.fill("#ob-t-other", "سكوات، بنش")
+    a.click("[data-act=ob-area][data-v=project]")  # left empty: gets the suggestion
+    a.click("[data-act=ob-next]"); a.click("[data-act=ob-next]"); a.click("[data-act=ob-next]")
+    p.fill("#ob-extra", "أقرا ١٠ صفحات")
+    a.click("[data-act=ob-next]")
+    a.click("[data-act=ob-finish]")
+    groups = {g["title"]: g for g in a.S()["groups"]}
+    assert [i["label"] for i in groups["المذاكرة"]["items"]] == ["ساعة أحياء", "حل مسائل كيميا"]
+    assert groups["المذاكرة"]["sched"] == {"type": "days", "days": [0, 1, 2, 3]}
+    assert [i["label"] for i in groups["الجيم"]["items"]] == ["سكوات", "بنش"]
+    assert [i["label"] for i in groups["مشروعي"]["items"]] == ["ساعة على المشروع"]
+    assert "أقرا ١٠ صفحات" in [i["label"] for i in groups["عاداتي"]["items"]]
+
+
+def test_text_survives_rerender_in_onboarding(app):
+    a = app()
+    a.click("[data-act=ob-next]"); a.click("[data-act=ob-next]")
+    a.click("[data-act=ob-area][data-v=work]")
+    a.page.fill("#ob-t-work", "مكالمات العملاء")
+    a.click("[data-act=ob-area][data-v=home]")  # re-renders the step
+    assert a.page.input_value("#ob-t-work") == "مكالمات العملاء"
+
+
+def test_prayer_shows_a_verse_or_hadith(app):
+    a = app()
+    a.onboard()
+    a.click("[data-act=toggle][data-id=dhuhr]")
+    assert a.page.is_visible("#praise")
+    words = a.js("window.__yawmi.WORDS.words.map(w => w.t)")
+    assert a.page.text_content("#praise p") in words and a.page.text_content("#praise small")
+    a.click("#praise")
+    assert not a.page.is_visible("#praise")
+    a.js("(() => { window.__yawmi.S.settings.prayerWords = false })()")
+    a.click("[data-act=toggle][data-id=asr]")
+    assert not a.page.is_visible("#praise")
+
+
+def test_no_verse_for_ordinary_items(app):
+    a = app()
+    a.onboard()
+    other = a.js("window.__yawmi.S.groups.find(g => g.kind !== 'prayers').items[0].id")
+    a.click(f"[data-act=toggle][data-id='{other}']")
+    assert not a.page.is_visible("#praise")
+
+
+def test_fajr_words_fit_fajr():
+    page = (ROOT / "android/app/src/main/assets/index.html").read_text(encoding="utf-8")
+    import re
+    w = json.loads(re.search(r"^const WORDS = (\{.*\});$", page, re.M).group(1))
+    assert len(w["words"]) >= 10 and all(x["t"] and x["s"] for x in w["words"])
+    assert any("fajr" in x.get("p", []) for x in w["words"])
+
+
+def test_task_type_is_guessed_and_editable(app):
+    a = app()
+    a.onboard()
+    for text, kind in [("ميتنج مع الفريق", "meeting"), ("مشوار البنك", "errand"), ("كلم أحمد", "call"),
+                       ("مذاكرة فصل ٣", "study"), ("تقرير الشهر", "work"), ("اشتري هدية", "errand"), ("أرتب الأوضة", "task")]:
+        a.page.fill("#newtask", text)
+        a.page.press("#newtask", "Enter")
+        t = next(t for t in a.S()["tasks"].values() if t["text"] == text)
+        assert t["kind"] == kind, text
+    a.click("[data-act=task-open] >> nth=0")
+    a.click("[data-act=task-kind][data-v=call]")
+    assert any(t["kind"] == "call" and t["text"] != "كلم أحمد" for t in a.S()["tasks"].values())
+
+
+def test_brief_settings(app):
+    a = app(android=True)
+    a.onboard()
+    a.click("header [data-act=settings]")
+    assert a.page.is_visible("#sec-brief")
+    a.click("[data-act=brief-enabled]")
+    assert a.S()["settings"]["brief"]["enabled"] is False
+    a.click("[data-act=updates-notify]")
+    assert a.S()["settings"]["updatesNotify"] is False

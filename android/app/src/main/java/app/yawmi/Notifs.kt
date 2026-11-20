@@ -99,6 +99,55 @@ object Notifs {
         }
     }
 
+    /** A notification that opens a web link (e.g. the new APK). */
+    @SuppressLint("MissingPermission")
+    fun link(ctx: Context, code: Int, title: String, text: String, url: String) {
+        if (!canPost(ctx)) return
+        ensureChannels(ctx)
+        val open = PendingIntent.getActivity(
+            ctx, 20000 + code,
+            Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        val n = NotificationCompat.Builder(ctx, CH_REMIND)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setColor(COLOR)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setContentIntent(open)
+            .setAutoCancel(true)
+            .build()
+        try {
+            NotificationManagerCompat.from(ctx).notify(code, n)
+        } catch (e: SecurityException) {
+            // permission revoked
+        }
+    }
+
+    /** A silent note that clears itself (e.g. a verse after "صليت ✓"). */
+    @SuppressLint("MissingPermission")
+    fun quiet(ctx: Context, code: Int, title: String, text: String, timeoutMs: Long = 3 * 60_000L) {
+        if (!canPost(ctx)) return
+        ensureChannels(ctx)
+        val n = NotificationCompat.Builder(ctx, CH_REMIND)
+            .setSmallIcon(R.drawable.ic_stat)
+            .setColor(COLOR)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setSilent(true)
+            .setTimeoutAfter(timeoutMs)
+            .setAutoCancel(true)
+            .setContentIntent(openApp(ctx, code))
+            .build()
+        try {
+            NotificationManagerCompat.from(ctx).notify(code, n)
+        } catch (e: SecurityException) {
+            // permission revoked
+        }
+    }
+
     /** Used only if the ringing service cannot start: a loud full-screen notification instead. */
     @SuppressLint("MissingPermission")
     fun alarmFallback(ctx: Context, test: Boolean) {

@@ -358,7 +358,15 @@ class AlarmActivity : AppCompatActivity() {
         switchBtn.visibility = View.GONE
         status.textSize = 22f
         status.text = if (test) "التجربة نجحت. كده المنبه جاهز." else "صباح النور. اتوضا وصلّي."
-        window.decorView.postDelayed({ finish() }, 2200)
+        var stay = 2200L
+        if (!test && Store.settings(this).optBoolean("prayerWords", true)) {
+            PageData.prayerWord(this, "fajr")?.let { (_, word) ->
+                status.text = "صباح النور. اتوضا وصلّي.\n\n$word"
+                status.textSize = 18f
+                stay = 7000L
+            }
+        }
+        window.decorView.postDelayed({ finish() }, stay)
     }
 
     override fun onResume() {
